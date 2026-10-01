@@ -1,0 +1,386 @@
+[
+  {
+    "id": "test-01",
+    "title": "Atlas site 01 · North African uplands",
+    "region": "Morocco",
+    "coordinates": [
+      -5.3,
+      31.8
+    ],
+    "ageOlder": 300000,
+    "ageYounger": 260000,
+    "theme": "Origins",
+    "journeyOrder": 1,
+    "description": "A synthetic fossil-discovery record for testing how the atlas presents human origins. The location and age range are illustrative and do not represent a verified discovery.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-02",
+    "title": "Atlas site 02 · Rift Valley",
+    "region": "Ethiopia",
+    "coordinates": [
+      40.5,
+      9.3
+    ],
+    "ageOlder": 230000,
+    "ageYounger": 180000,
+    "theme": "Origins",
+    "journeyOrder": 2,
+    "description": "A synthetic fossil-discovery record for testing how the atlas presents human origins. The location and age range are illustrative and do not represent a verified discovery.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-03",
+    "title": "Atlas site 03 · Southern coast",
+    "region": "South Africa",
+    "coordinates": [
+      22.1,
+      -34.1
+    ],
+    "ageOlder": 170000,
+    "ageYounger": 140000,
+    "theme": "Culture",
+    "journeyOrder": null,
+    "description": "A synthetic cultural-discovery record for testing tools, art, and symbolic behavior in the atlas. Its discovery, date range, and interpretation are illustrative.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-04",
+    "title": "Atlas site 04 · Eastern lakes",
+    "region": "Kenya",
+    "coordinates": [
+      36.3,
+      -0.8
+    ],
+    "ageOlder": 150000,
+    "ageYounger": 120000,
+    "theme": "Origins",
+    "journeyOrder": null,
+    "description": "A synthetic fossil-discovery record for testing how the atlas presents human origins. The location and age range are illustrative and do not represent a verified discovery.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-05",
+    "title": "Atlas site 05 · Levant corridor",
+    "region": "Israel",
+    "coordinates": [
+      35.1,
+      32.7
+    ],
+    "ageOlder": 120000,
+    "ageYounger": 90000,
+    "theme": "Migration",
+    "journeyOrder": 3,
+    "description": "A synthetic occupation record for exploring geographic movement in the prototype. This point is not evidence of a first arrival, and its dates are not research claims.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-06",
+    "title": "Atlas site 06 · Arabian peninsula",
+    "region": "Saudi Arabia",
+    "coordinates": [
+      43.1,
+      23.9
+    ],
+    "ageOlder": 100000,
+    "ageYounger": 80000,
+    "theme": "Migration",
+    "journeyOrder": null,
+    "description": "A synthetic occupation record for exploring geographic movement in the prototype. This point is not evidence of a first arrival, and its dates are not research claims.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-07",
+    "title": "Atlas site 07 · Coastal workshop",
+    "region": "South Africa",
+    "coordinates": [
+      21.4,
+      -34.4
+    ],
+    "ageOlder": 95000,
+    "ageYounger": 70000,
+    "theme": "Culture",
+    "journeyOrder": null,
+    "description": "A synthetic cultural-discovery record for testing tools, art, and symbolic behavior in the atlas. Its discovery, date range, and interpretation are illustrative.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-08",
+    "title": "Atlas site 08 · Nile valley",
+    "region": "Egypt",
+    "coordinates": [
+      31.5,
+      26.2
+    ],
+    "ageOlder": 85000,
+    "ageYounger": 65000,
+    "theme": "Migration",
+    "journeyOrder": null,
+    "description": "A synthetic occupation record for exploring geographic movement in the prototype. This point is not evidence of a first arrival, and its dates are not research claims.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-09",
+    "title": "Atlas site 09 · South Asian coast",
+    "region": "India",
+    "coordinates": [
+      73.8,
+      15.6
+    ],
+    "ageOlder": 75000,
+    "ageYounger": 55000,
+    "theme": "Migration",
+    "journeyOrder": 4,
+    "description": "A synthetic occupation record for exploring geographic movement in the prototype. This point is not evidence of a first arrival, and its dates are not research claims.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-10",
+    "title": "Atlas site 10 · Island crossing",
+    "region": "Indonesia",
+    "coordinates": [
+      110.3,
+      -7.6
+    ],
+    "ageOlder": 65000,
+    "ageYounger": 45000,
+    "theme": "Migration",
+    "journeyOrder": null,
+    "description": "A synthetic occupation record for exploring geographic movement in the prototype. This point is not evidence of a first arrival, and its dates are not research claims.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-11",
+    "title": "Atlas site 11 · Northern Australia",
+    "region": "Australia",
+    "coordinates": [
+      132.9,
+      -12.5
+    ],
+    "ageOlder": 60000,
+    "ageYounger": 40000,
+    "theme": "Migration",
+    "journeyOrder": 5,
+    "description": "A synthetic occupation record for exploring geographic movement in the prototype. This point is not evidence of a first arrival, and its dates are not research claims.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-12",
+    "title": "Atlas site 12 · Mountain shelter",
+    "region": "Iran",
+    "coordinates": [
+      47.1,
+      34.5
+    ],
+    "ageOlder": 55000,
+    "ageYounger": 40000,
+    "theme": "Culture",
+    "journeyOrder": null,
+    "description": "A synthetic cultural-discovery record for testing tools, art, and symbolic behavior in the atlas. Its discovery, date range, and interpretation are illustrative.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-13",
+    "title": "Atlas site 13 · Southeast Asian cave",
+    "region": "Laos",
+    "coordinates": [
+      103.3,
+      20.2
+    ],
+    "ageOlder": 50000,
+    "ageYounger": 35000,
+    "theme": "Culture",
+    "journeyOrder": null,
+    "description": "A synthetic cultural-discovery record for testing tools, art, and symbolic behavior in the atlas. Its discovery, date range, and interpretation are illustrative.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-14",
+    "title": "Atlas site 14 · European foothills",
+    "region": "Bulgaria",
+    "coordinates": [
+      25.3,
+      42.9
+    ],
+    "ageOlder": 45000,
+    "ageYounger": 35000,
+    "theme": "Migration",
+    "journeyOrder": null,
+    "description": "A synthetic occupation record for exploring geographic movement in the prototype. This point is not evidence of a first arrival, and its dates are not research claims.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-15",
+    "title": "Atlas site 15 · Island gallery",
+    "region": "Indonesia",
+    "coordinates": [
+      119.8,
+      -5.1
+    ],
+    "ageOlder": 43000,
+    "ageYounger": 30000,
+    "theme": "Culture",
+    "journeyOrder": null,
+    "description": "A synthetic cultural-discovery record for testing tools, art, and symbolic behavior in the atlas. Its discovery, date range, and interpretation are illustrative.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-16",
+    "title": "Atlas site 16 · Central Asian valley",
+    "region": "Uzbekistan",
+    "coordinates": [
+      66.8,
+      39.6
+    ],
+    "ageOlder": 42000,
+    "ageYounger": 32000,
+    "theme": "Migration",
+    "journeyOrder": null,
+    "description": "A synthetic occupation record for exploring geographic movement in the prototype. This point is not evidence of a first arrival, and its dates are not research claims.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-17",
+    "title": "Atlas site 17 · Painted shelter",
+    "region": "France",
+    "coordinates": [
+      4.4,
+      44.4
+    ],
+    "ageOlder": 38000,
+    "ageYounger": 28000,
+    "theme": "Culture",
+    "journeyOrder": null,
+    "description": "A synthetic cultural-discovery record for testing tools, art, and symbolic behavior in the atlas. Its discovery, date range, and interpretation are illustrative.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-18",
+    "title": "Atlas site 18 · River encampment",
+    "region": "Germany",
+    "coordinates": [
+      9.8,
+      48.4
+    ],
+    "ageOlder": 36000,
+    "ageYounger": 26000,
+    "theme": "Culture",
+    "journeyOrder": null,
+    "description": "A synthetic cultural-discovery record for testing tools, art, and symbolic behavior in the atlas. Its discovery, date range, and interpretation are illustrative.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-19",
+    "title": "Atlas site 19 · East Asian plain",
+    "region": "China",
+    "coordinates": [
+      116.2,
+      39.7
+    ],
+    "ageOlder": 35000,
+    "ageYounger": 25000,
+    "theme": "Migration",
+    "journeyOrder": null,
+    "description": "A synthetic occupation record for exploring geographic movement in the prototype. This point is not evidence of a first arrival, and its dates are not research claims.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-20",
+    "title": "Atlas site 20 · Northern frontier",
+    "region": "Russia",
+    "coordinates": [
+      133,
+      67.5
+    ],
+    "ageOlder": 30000,
+    "ageYounger": 20000,
+    "theme": "Migration",
+    "journeyOrder": null,
+    "description": "A synthetic occupation record for exploring geographic movement in the prototype. This point is not evidence of a first arrival, and its dates are not research claims.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-21",
+    "title": "Atlas site 21 · Steppe settlement",
+    "region": "Czechia",
+    "coordinates": [
+      16.7,
+      48.9
+    ],
+    "ageOlder": 28000,
+    "ageYounger": 22000,
+    "theme": "Culture",
+    "journeyOrder": null,
+    "description": "A synthetic cultural-discovery record for testing tools, art, and symbolic behavior in the atlas. Its discovery, date range, and interpretation are illustrative.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-22",
+    "title": "Atlas site 22 · Pacific edge",
+    "region": "United States",
+    "coordinates": [
+      -148.5,
+      64.8
+    ],
+    "ageOlder": 23000,
+    "ageYounger": 15000,
+    "theme": "Migration",
+    "journeyOrder": 6,
+    "description": "A synthetic occupation record for exploring geographic movement in the prototype. This point is not evidence of a first arrival, and its dates are not research claims.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-23",
+    "title": "Atlas site 23 · Southern shelter",
+    "region": "Chile",
+    "coordinates": [
+      -73,
+      -41.5
+    ],
+    "ageOlder": 16000,
+    "ageYounger": 12000,
+    "theme": "Migration",
+    "journeyOrder": null,
+    "description": "A synthetic occupation record for exploring geographic movement in the prototype. This point is not evidence of a first arrival, and its dates are not research claims.",
+    "isTestData": true,
+    "sources": []
+  },
+  {
+    "id": "test-24",
+    "title": "Atlas site 24 · River gathering",
+    "region": "Türkiye",
+    "coordinates": [
+      38.8,
+      37.2
+    ],
+    "ageOlder": 14000,
+    "ageYounger": 10000,
+    "theme": "Culture",
+    "journeyOrder": null,
+    "description": "A synthetic cultural-discovery record for testing tools, art, and symbolic behavior in the atlas. Its discovery, date range, and interpretation are illustrative.",
+    "isTestData": true,
+    "sources": []
+  }
+]
