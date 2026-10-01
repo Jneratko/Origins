@@ -1,0 +1,734 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "type": "wikidata-query-service",
+    "property": "P571",
+    "endpoint": "https://query.wikidata.org/sparql",
+    "fetchedAt": "2026-10-01T21:27:27.721Z",
+    "query": "PREFIX wd: <http://www.wikidata.org/entity/>\nPREFIX wdt: <http://www.wikidata.org/prop/direct/>\nPREFIX p: <http://www.wikidata.org/prop/>\nPREFIX psv: <http://www.wikidata.org/prop/statement/value/>\nPREFIX wikibase: <http://wikiba.se/ontology#>\nPREFIX schema: <http://schema.org/>\nPREFIX bd: <http://www.bigdata.com/rdf#>\n\nSELECT DISTINCT ?site ?siteLabel ?coordinates\n  ?inceptionDate ?datePrecision ?calendarModel ?article\nWHERE {\n  ?site wdt:P31/wdt:P279* wd:Q839954;\n        wdt:P625 ?coordinates;\n        p:P571 ?dateStatement.\n  FILTER(isLiteral(?coordinates))\n  ?dateStatement a wikibase:BestRank;\n                 psv:P571 ?dateValue.\n  ?dateValue wikibase:timeValue ?inceptionDate;\n             wikibase:timePrecision ?datePrecision;\n             wikibase:timeCalendarModel ?calendarModel.\n  FILTER(YEAR(?inceptionDate) >= -298000 && YEAR(?inceptionDate) <= -8000)\n  ?article schema:about ?site;\n           schema:isPartOf <https://en.wikipedia.org/>.\n  SERVICE wikibase:label { bd:serviceParam wikibase:language \"en\". }\n}\nORDER BY ?site ?inceptionDate ?coordinates ?article\nLIMIT 1000\n",
+    "rowLimit": 1000,
+    "inputRows": 28,
+    "possiblyTruncated": false
+  },
+  "notes": [
+    "Coordinates use [longitude, latitude].",
+    "Inception values are not verified construction or occupation dates.",
+    "Raw dates retain their calendar and precision; no timeline ages are inferred.",
+    "This export may be limited and is not an exhaustive archaeological inventory."
+  ],
+  "rejectedRows": [],
+  "records": [
+    {
+      "id": "Q5687",
+      "title": "Jericho",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q5687",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Jericho"
+      ],
+      "coordinateCandidates": [
+        [
+          35.463055555,
+          31.856111111
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-9600-01-01T00:00:00Z",
+          "precision": 7,
+          "precisionLabel": "century",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985786",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q60305",
+      "title": "Tower of Jericho",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q60305",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Tower_of_Jericho"
+      ],
+      "coordinateCandidates": [
+        [
+          35.4439,
+          31.8708
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-8000-01-01T00:00:00Z",
+          "precision": 6,
+          "precisionLabel": "millennium",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985786",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q133575",
+      "title": "Cave of Altamira",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q133575",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Cave_of_Altamira"
+      ],
+      "coordinateCandidates": [
+        [
+          -4.11975,
+          43.376944444
+        ],
+        [
+          -4.11667,
+          43.38333
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-13000-01-01T00:00:00Z",
+          "precision": 6,
+          "precisionLabel": "millennium",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985786",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "multiple-coordinates",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q173532",
+      "title": "Byblos",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q173532",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Byblos"
+      ],
+      "coordinateCandidates": [
+        [
+          35.646846,
+          34.119501
+        ],
+        [
+          35.65,
+          34.116666666
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-8000-01-01T00:00:00Z",
+          "precision": 6,
+          "precisionLabel": "millennium",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985786",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "multiple-coordinates",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q214944",
+      "title": "Göbekli Tepe",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q214944",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/G%C3%B6bekli_Tepe"
+      ],
+      "coordinateCandidates": [
+        [
+          38.9225,
+          37.223055555
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-9999-01-01T00:00:00Z",
+          "precision": 6,
+          "precisionLabel": "millennium",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985727",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q372696",
+      "title": "Spirit Cave, Thailand",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q372696",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Spirit_Cave_(Thailand)"
+      ],
+      "coordinateCandidates": [
+        [
+          98.281083333,
+          19.567805555
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-9000-01-01T00:00:00Z",
+          "precision": 6,
+          "precisionLabel": "millennium",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985727",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q794830",
+      "title": "Aşıklı Höyük",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q794830",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/A%C5%9F%C4%B1kl%C4%B1_H%C3%B6y%C3%BCk"
+      ],
+      "coordinateCandidates": [
+        [
+          34.23,
+          38.349
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-8200-01-01T00:00:00Z",
+          "precision": 7,
+          "precisionLabel": "century",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985786",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q1151606",
+      "title": "Nevalı Çori",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q1151606",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Neval%C4%B1_%C3%87ori"
+      ],
+      "coordinateCandidates": [
+        [
+          38.605555555,
+          37.518333333
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-8400-01-01T00:00:00Z",
+          "precision": 7,
+          "precisionLabel": "century",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985727",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q1243595",
+      "title": "Ounjougou",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q1243595",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Ounjougou"
+      ],
+      "coordinateCandidates": [
+        [
+          -3.2333,
+          14.6333
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-9500-01-01T00:00:00Z",
+          "precision": 7,
+          "precisionLabel": "century",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985727",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q1427189",
+      "title": "Mureybet",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q1427189",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Mureybet"
+      ],
+      "coordinateCandidates": [
+        [
+          38.128738,
+          36.043408
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-10200-01-01T00:00:00Z",
+          "precision": 7,
+          "precisionLabel": "century",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985786",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q1441331",
+      "title": "Franchthi Cave",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q1441331",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Franchthi_Cave"
+      ],
+      "coordinateCandidates": [
+        [
+          23.131286,
+          37.422413
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-38000-01-01T00:00:00Z",
+          "precision": 4,
+          "precisionLabel": "hundred thousand years",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985786",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q1540418",
+      "title": "Nanzhuangtou",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q1540418",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Nanzhuangtou"
+      ],
+      "coordinateCandidates": [
+        [
+          115.662248,
+          39.126648
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-12600-01-01T00:00:00Z",
+          "precision": 4,
+          "precisionLabel": "hundred thousand years",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985786",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q2299200",
+      "title": "Star Carr",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q2299200",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Star_Carr"
+      ],
+      "coordinateCandidates": [
+        [
+          -0.423661,
+          54.2143
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-8770-01-01T00:00:00Z",
+          "precision": 8,
+          "precisionLabel": "decade",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985786",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q2402267",
+      "title": "Tell es-Sultan",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q2402267",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Tell_es-Sultan"
+      ],
+      "coordinateCandidates": [
+        [
+          35.44456389,
+          31.87171944
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-9600-01-01T00:00:00Z",
+          "precision": 7,
+          "precisionLabel": "century",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985727",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q3120596",
+      "title": "Guilá Naquitz Cave",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q3120596",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Guil%C3%A1_Naquitz_Cave"
+      ],
+      "coordinateCandidates": [
+        [
+          -96.308888888,
+          16.975277777
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-10750-01-01T00:00:00Z",
+          "precision": 4,
+          "precisionLabel": "hundred thousand years",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985786",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q3523239",
+      "title": "M'lefaat",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q3523239",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/M%27lefaat"
+      ],
+      "coordinateCandidates": [
+        [
+          43.55,
+          36.3
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-10000-01-01T00:00:00Z",
+          "precision": 5,
+          "precisionLabel": "ten thousand years",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985727",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q4178402",
+      "title": "Tell Qaramel",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q4178402",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Tell_Qaramel"
+      ],
+      "coordinateCandidates": [
+        [
+          37.275,
+          36.378
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-10900-01-01T00:00:00Z",
+          "precision": 6,
+          "precisionLabel": "millennium",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985727",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q4661507",
+      "title": "Aammiq",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q4661507",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Aammiq"
+      ],
+      "coordinateCandidates": [
+        [
+          35.788983,
+          33.731431
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-12000-01-01T00:00:00Z",
+          "precision": 6,
+          "precisionLabel": "millennium",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985786",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q5561775",
+      "title": "Gilgal I",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q5561775",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Gilgal_I"
+      ],
+      "coordinateCandidates": [
+        [
+          35.475556,
+          32.032778
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-9299-01-01T00:00:00Z",
+          "precision": 9,
+          "precisionLabel": "year",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985727",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified"
+      ]
+    },
+    {
+      "id": "Q6099672",
+      "title": "Boncuklu Höyük",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q6099672",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Boncuklu_H%C3%B6y%C3%BCk"
+      ],
+      "coordinateCandidates": [
+        [
+          32.86478,
+          37.75183
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-8500-01-01T00:00:00Z",
+          "precision": 7,
+          "precisionLabel": "century",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985727",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q6109935",
+      "title": "Jabal es Saaïdé",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q6109935",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Jabal_es_Saa%C3%AFd%C3%A9"
+      ],
+      "coordinateCandidates": [
+        [
+          36.0578,
+          34.0344
+        ],
+        [
+          36.228847,
+          34.155444
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-9999-01-01T00:00:00Z",
+          "precision": 9,
+          "precisionLabel": "year",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985727",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "multiple-coordinates"
+      ]
+    },
+    {
+      "id": "Q6580884",
+      "title": "Pınarbaşı Gölü",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q6580884",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/P%C4%B1narba%C5%9F%C4%B1_G%C3%B6l%C3%BC"
+      ],
+      "coordinateCandidates": [
+        [
+          33.0192,
+          37.4939
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-9000-01-01T00:00:00Z",
+          "precision": 6,
+          "precisionLabel": "millennium",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985727",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q7294654",
+      "title": "Ras El Kelb",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q7294654",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Ras_El_Kelb"
+      ],
+      "coordinateCandidates": [
+        [
+          35.58608333,
+          33.91861111
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-50000-01-01T00:00:00Z",
+          "precision": 5,
+          "precisionLabel": "ten thousand years",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985786",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    },
+    {
+      "id": "Q13708140",
+      "title": "Nemrik 9",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q13708140",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Nemrik_9"
+      ],
+      "coordinateCandidates": [
+        [
+          42.85,
+          36.716667
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-9799-01-01T00:00:00Z",
+          "precision": 9,
+          "precisionLabel": "year",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985727",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified"
+      ]
+    },
+    {
+      "id": "Q15841331",
+      "title": "Qermez Dere",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q15841331",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Qermez_Dere"
+      ],
+      "coordinateCandidates": [
+        [
+          42.83333333,
+          36.51666667
+        ]
+      ],
+      "inceptionDates": [
+        {
+          "value": "-9200-01-01T00:00:00Z",
+          "precision": 7,
+          "precisionLabel": "century",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985786",
+          "property": "P571"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified",
+        "coarse-date-precision"
+      ]
+    }
+  ]
+}

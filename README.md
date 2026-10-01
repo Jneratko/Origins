@@ -85,6 +85,26 @@ Select **Use demo map** to remove the saved token and return to the demo basemap
 
 ## Edit sample data
 
+### Import Wikidata candidates
+
+Run the dependency-free importer with Node.js and a downloaded Query Service JSON file:
+
+```powershell
+node scripts/import-wikidata.mjs 'C:\Users\jnera\Downloads\query (4).json'
+```
+
+Or use Node.js 18 or newer to fetch directly from Wikidata:
+
+```powershell
+node scripts/import-wikidata.mjs --fetch
+```
+
+This runs `scripts/archaeological-sites.sparql`: archaeological sites with coordinate points, English Wikipedia articles, and inception years between -298000 and -8000 (approximate calendar-year boundaries). The query has a 1,000-row cap; reaching it produces a warning and `possiblyTruncated: true`. Multiple rows can represent one site. Edit the saved query to adjust scope or limits. The output records the query, endpoint, and fetch time. A failed request, invalid JSON response, or empty result leaves the existing output intact. Requests time out after 55 seconds; rate-limit errors report Retry-After when available, without automatic retries. Wikidata's [SPARQL interface documentation](https://www.wikidata.org/wiki/Wikidata:SPARQL_query_service#Interfacing) describes the JSON endpoint used here.
+
+The importer writes `data/candidates.json`. It accepts the table export or the endpoint's `results.bindings` format, groups rows by Wikidata ID, and preserves alternate coordinates and inception dates. Coordinates use `[longitude, latitude]`. Dates retain their raw value, precision code, and calendar model; they are not converted to years ago. Every candidate needs date-meaning review, with additional flags for multiple values and precision coarser than a year. Invalid rows are reported in `rejectedRows` and cause a nonzero exit code; valid rows are still saved. If no valid records remain, no output is written.
+
+An optional second argument selects the output file. Rerunning replaces that generated file, so keep editorial corrections separately. Candidates are not loaded by the atlas and do not replace `sites.json`. The initial download is a 25-row sample, not a complete inventory.
+
 Edit `sites.json`, preview the app, then commit and push your changes.
 
 | Field | Meaning |
