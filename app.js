@@ -19,10 +19,12 @@ const colors = {
 };
 const fmt = n => n.toLocaleString('en-US');
 const age = s => `≈ ${fmt(s.ageOlder)} years BP`;
-const timelineMin = 1950; // Year 0 on the approximate BP scale.
+let timelineMin = 1950; // Updated from the latest imported timeline point.
 const timelineMax = 10000; // Oldest position groups all dates older than 10k BP.
+const calendarLabel = bp => bp === 1950 ? 'Year 0'
+  : bp > 1950 ? `≈ ${fmt(Math.round(bp - 1950))} BCE` : `≈ ${fmt(Math.round(1950 - bp))} CE`;
 const timelineLabel = () => threshold === timelineMax ? 'Older than 10k years'
-  : threshold === timelineMin ? 'Year 0' : `≈ ${fmt(threshold - 1950)} BCE`;
+  : calendarLabel(threshold);
 
 function importedSites(dataset) {
   if (!Array.isArray(dataset.records) || !dataset.records.length) throw new Error('No imported sites');
@@ -51,6 +53,7 @@ function stop() {
   clearInterval(timer);
   timer = null;
   $('play').textContent = '▶ Play';
+  $('play').setAttribute('aria-label', 'Play timeline');
 }
 
 function refresh() {
@@ -60,6 +63,7 @@ function refresh() {
   for (const s of list) {
     const b = document.createElement('button');
     b.className = 'site' + (selected === s.id ? ' active' : '');
+    b.atlasSiteId = s.id;
     const dot = document.createElement('i');
     dot.className = s.theme;
     const text = document.createElement('div');
@@ -105,7 +109,10 @@ function selectSite(id, fly = true) {
   const s = data.find(x => x.id === id);
   if (!s) throw new Error('Unknown site');
   selected = id;
-  refresh();
+  // Selection does not change the filters. Keep the existing controls and focus.
+  for (const button of $('sites').children) {
+    if (button.atlasSiteId) button.className = 'site' + (button.atlasSiteId === selected ? ' active' : '');
+  }
   const a = $('detail');
   a.replaceChildren();
   a.hidden = false;
@@ -284,6 +291,7 @@ $('play').onclick = () => {
   $('time').value = threshold;
   refresh();
   $('play').textContent = 'Ⅱ Pause';
+  $('play').setAttribute('aria-label', 'Pause timeline');
   timer = setInterval(() => {
     threshold = Math.max(timelineMin, threshold - 250);
     $('time').value = threshold;
@@ -341,6 +349,12 @@ async function init() {
     const r = await fetch('data/candidates.json', { cache: 'no-store' });
     if (!r.ok) throw Error();
     data = importedSites(await r.json());
+    // Round down to a slider step so every site's timeline point is reachable.
+    timelineMin = Math.min(1950, Math.floor(Math.min(...data.map(s => s.ageOlder)) / 50) * 50);
+    $('timedesc').textContent = `Show sites cumulatively through ${calendarLabel(timelineMin)}. The oldest position groups dates older than 10k years (before 1950).`;
+    $('tickMiddleOlder').textContent = calendarLabel(timelineMax - (timelineMax - timelineMin) / 3);
+    $('tickMiddleYounger').textContent = calendarLabel(timelineMax - 2 * (timelineMax - timelineMin) / 3);
+    $('tickLatest').textContent = calendarLabel(timelineMin);
     threshold = timelineMin;
     $('time').min = timelineMin;
     $('time').max = timelineMax;
@@ -379,6 +393,7 @@ async function init() {
           query = '';
           $('search').value = '';
           document.querySelectorAll('[data-theme]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.theme === 'all')));
+          refresh();
           selectSite(input.siteId);
           return {
             selectedSiteId: selected,

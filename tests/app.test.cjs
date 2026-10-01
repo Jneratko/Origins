@@ -71,7 +71,7 @@ test('imports unique sites, plots numeric locations, searches and displays sourc
   assert.ok(detail.children.some(e => e.textContent?.includes('recorded locations')));
 });
 
-test('timeline groups older than 10k, plays through Year 0, and All time includes later records', async () => {
+test('timeline groups older than 10k and plays through the latest imported year', async () => {
   const fixture = { records: ['-9000', '-8050', '-1000', '0100'].map((year, index) => ({
     ...dataset.records[0], id: `Q${index + 1}`, title: `Fixture ${index}`,
     inceptionDates: [{ ...dataset.records[0].inceptionDates[0], value: `${year}-01-01T00:00:00Z` }]
@@ -87,11 +87,40 @@ test('timeline groups older than 10k, plays through Year 0, and All time include
   get('alltime').onclick();
   assert.equal(get('sites').children.length, 4);
   get('play').onclick();
+  assert.equal(get('play').attributes['aria-label'], 'Pause timeline');
   for (let i = 0; i < 60; i++) app.tick();
-  assert.equal(get('sites').children.length, 3);
-  assert.equal(get('timeLabel').textContent, 'Year 0');
+  assert.equal(get('sites').children.length, 4);
+  assert.equal(get('timeLabel').textContent, '≈ 100 CE');
   assert.equal(get('play').textContent, '▶ Play');
+  assert.equal(get('play').attributes['aria-label'], 'Play timeline');
   assert.equal(Number(get('time').value), Number(get('time').min));
+});
+
+test('selection preserves list buttons and map markers used by keyboard navigation', async () => {
+  const app = await boot();
+  const buttons = [...app.elements.get('sites').children];
+  const markers = app.markers.filter(m => !m.removed);
+  buttons[0].onclick();
+  assert.deepEqual(app.elements.get('sites').children, buttons);
+  assert.equal(buttons[0].className, 'site active');
+  markers[1].element.onclick();
+  assert.equal(buttons[0].className, 'site');
+  assert.equal(buttons[1].className, 'site active');
+  assert.deepEqual(app.markers.filter(m => !m.removed), markers);
+});
+
+test('playback reaches all sites in the active dataset and manual pause updates its label', async () => {
+  const app = await boot();
+  const get = id => app.elements.get(id);
+  assert.equal(Number(get('time').min), 450);
+  assert.equal(get('tickLatest').textContent, '≈ 1,500 CE');
+  get('play').onclick();
+  get('play').onclick();
+  assert.equal(get('play').attributes['aria-label'], 'Play timeline');
+  get('play').onclick();
+  for (let i = 0; i < 40; i++) app.tick();
+  assert.equal(get('sites').children.length, dataset.records.length);
+  assert.equal(get('timeLabel').textContent, '≈ 1,500 CE');
 });
 
 test('malformed imported records produce a visible load error', async () => {
