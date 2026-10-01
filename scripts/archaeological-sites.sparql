@@ -18,7 +18,9 @@ WHERE {
   ?dateValue wikibase:timeValue ?inceptionDate;
              wikibase:timePrecision ?datePrecision;
              wikibase:timeCalendarModel ?calendarModel.
-  FILTER(YEAR(?inceptionDate) >= -298000 && YEAR(?inceptionDate) <= -8000)
+ FILTER(
+  YEAR(?inceptionDate) >= -1000000 &&
+  YEAR(?inceptionDate) <= 1500)
   ?article schema:about ?site;
            schema:isPartOf <https://en.wikipedia.org/>.
   SERVICE wikibase:label { bd:serviceParam wikibase:language "en". }

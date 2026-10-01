@@ -15,6 +15,11 @@
   box-sizing: border-box;
 }
 
+[hidden] { display: none !important; }
+.Archaeology { background: var(--gold); }
+.source-links { display: flex; gap: 18px; margin-top: 16px; }
+.source-links a { color: var(--gold); text-decoration: underline; }
+
 body {
   margin: 0;
   background: var(--bg);

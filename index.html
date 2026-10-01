@@ -6,7 +6,7 @@
     <title>Origins · World History Atlas</title>
     <meta
       name="description"
-      content="Explore early Homo sapiens through geography and time. An atlas prototype with illustrative test data."
+      content="Explore prehistoric archaeological sites through geography and time, with Wikipedia and Wikidata links."
     >
     <link
       rel="icon"
@@ -29,7 +29,7 @@
         <span class="brandmark">◎</span>
         <div>ORIGINS<small>WORLD HISTORY ATLAS</small></div>
       </a>
-      <span class="era">CHAPTER 01 <span>Early Homo sapiens</span></span>
+      <span class="era">CHAPTER 01 <span>Prehistoric archaeology</span></span>
       <button id="settings">Map settings</button>
     </header>
 
@@ -40,8 +40,8 @@
         <p class="intro">Explore our beginnings, one place and one moment at a time.</p>
 
         <div class="notice">
-          <b>Illustrative test data</b>
-          <span>All sites, dates, descriptions, and routes below are prototype examples—not historical evidence.</span>
+          <b>Archaeological sites</b>
+          <span>Imported from Wikidata, with Wikipedia articles. Timeline points use recorded inception dates.</span>
         </div>
 
         <label class="searchlabel" for="search">Find a site</label>
@@ -51,7 +51,7 @@
           type="search"
         >
 
-        <div class="filters" aria-label="Filter by theme">
+        <div class="filters" aria-label="Filter by theme" hidden>
           <button data-theme="all" aria-pressed="true">All sites</button>
           <button data-theme="Origins" aria-pressed="false">Origins</button>
           <button data-theme="Migration" aria-pressed="false">Migration</button>
@@ -64,7 +64,7 @@
         </div>
         <div id="sites"></div>
 
-        <button class="journey" id="journey">
+        <button class="journey" id="journey" hidden>
           <span>GUIDED JOURNEY</span>
           <b>The spread of Homo sapiens</b>
           <small>Explore 6 illustrative stops</small>
@@ -83,42 +83,40 @@
         <article id="detail" hidden></article>
 
         <div class="legend">
-          <span><i class="Origins"></i>Origins</span>
-          <span><i class="Migration"></i>Migration</span>
-          <span><i class="Culture"></i>Culture</span>
+          <span><i class="Origins"></i>Archaeological site</span>
         </div>
 
         <div class="timeline">
           <div class="timehead">
             <div>
               <span class="eyebrow">TRAVEL THROUGH TIME</span>
-              <strong id="timeLabel">300,000–10,000 years ago</strong>
+              <strong id="timeLabel">All imported dates</strong>
             </div>
             <button id="play" aria-label="Play timeline">▶ Play</button>
             <button id="alltime">All time</button>
           </div>
 
-          <label for="time" id="timedesc">Show sites at or before the selected moment</label>
+          <label for="time" id="timedesc">Show sites cumulatively through Year 0. The oldest position groups dates older than 10k years (before 1950).</label>
           <input
             id="time"
             type="range"
-            min="10000"
-            max="300000"
-            value="10000"
-            step="1000"
+            min="1950"
+            max="10000"
+            value="1950"
+            step="50"
             aria-describedby="timedesc"
           >
 
           <div class="ticks">
-            <span>300,000</span>
-            <span>200,000</span>
-            <span>100,000</span>
-            <span>10,000 years ago</span>
+            <span>Older than 10k years</span>
+            <span>≈ 5,400 BCE</span>
+            <span>≈ 2,700 BCE</span>
+            <span>Year 0</span>
           </div>
 
           <div class="timefoot">
-            <span>Modern geography · approximate sample locations</span>
-            <span>Early Homo sapiens</span>
+            <span>Modern geography · approximate locations</span>
+            <span>Prehistoric archaeology</span>
           </div>
         </div>
       </section>

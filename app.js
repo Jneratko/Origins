@@ -6,7 +6,7 @@ let data = [],
   markers = [],
   theme = 'all',
   query = '',
-  threshold = 10000,
+  threshold = 1950,
   allTime = true,
   selected = null,
   timer = null,
@@ -14,13 +14,37 @@ let data = [],
 const colors = {
   Origins: '#e7bc7a',
   Migration: '#76bfcc',
-  Culture: '#c49bc9'
+  Culture: '#c49bc9',
+  Archaeology: '#e7bc7a'
 };
 const fmt = n => n.toLocaleString('en-US');
-const age = s => `${fmt(s.ageOlder)}–${fmt(s.ageYounger)} years ago`;
+const age = s => `≈ ${fmt(s.ageOlder)} years BP`;
+const timelineMin = 1950; // Year 0 on the approximate BP scale.
+const timelineMax = 10000; // Oldest position groups all dates older than 10k BP.
+const timelineLabel = () => threshold === timelineMax ? 'Older than 10k years'
+  : threshold === timelineMin ? 'Year 0' : `≈ ${fmt(threshold - 1950)} BCE`;
+
+function importedSites(dataset) {
+  if (!Array.isArray(dataset.records) || !dataset.records.length) throw new Error('No imported sites');
+  return dataset.records.map(record => {
+    const coordinates = record.coordinateCandidates?.[0];
+    const dates = record.inceptionDates;
+    if (!coordinates || coordinates.length !== 2 || !coordinates.every(Number.isFinite) ||
+        Math.abs(coordinates[0]) > 180 || Math.abs(coordinates[1]) > 90 || !dates?.length) throw new Error('Invalid imported site');
+    // Use the oldest recorded inception as a single timeline point, not an occupation range.
+    const years = dates.map(d => Number(/^([+-]?\d+)-/.exec(d.value)?.[1]));
+    if (!years.every(Number.isFinite)) throw new Error('Invalid imported date');
+    const oldestYear = Math.min(...years);
+    const ageOlder = 1950 - oldestYear;
+    const timelineDate = dates[years.indexOf(oldestYear)];
+    return { ...record, coordinates, ageOlder, timelineDate, theme: 'Archaeology',
+      region: record.id, description: 'Explore this archaeological site through its Wikipedia article and Wikidata record.',
+      isTestData: false };
+  });
+}
 
 function visible() {
-  return data.filter(s => (theme === 'all' || s.theme === theme) && (!query || `${s.title} ${s.region} ${s.description}`.toLowerCase().includes(query)) && (allTime || s.ageOlder >= threshold));
+  return data.filter(s => (theme === 'all' || s.theme === theme) && (!query || `${s.title} ${s.region} ${s.description}`.toLowerCase().includes(query)) && (allTime || (threshold === timelineMax ? s.ageOlder > timelineMax : s.ageOlder >= threshold)));
 }
 
 function stop() {
@@ -42,7 +66,7 @@ function refresh() {
     const name = document.createElement('b');
     name.textContent = s.title;
     const sub = document.createElement('small');
-    sub.textContent = `${s.region} · ${fmt(s.ageOlder / 1000)}–${fmt(s.ageYounger / 1000)}k years ago`;
+    sub.textContent = `${age(s)} · ${s.timelineDate.precisionLabel} precision`;
     text.append(name, sub);
     b.append(dot, text);
     b.onclick = () => selectSite(s.id);
@@ -51,7 +75,7 @@ function refresh() {
   if (!list.length) {
     const p = document.createElement('p');
     p.className = 'empty';
-    p.textContent = 'No sample sites match. Try another theme, search, or time.';
+    p.textContent = 'No sites match. Try another search or time.';
     $('sites').append(p);
   }
   for (const m of markers) m.remove();
@@ -69,7 +93,8 @@ function refresh() {
       }).setLngLat(s.coordinates).addTo(map));
     }
   }
-  $('timeLabel').textContent = allTime ? '300,000–10,000 years ago' : `${fmt(threshold)} years ago`;
+  $('timeLabel').textContent = allTime ? 'All imported dates' : timelineLabel();
+  $('time').setAttribute('aria-valuetext', timelineLabel());
   if (selected && !list.some(s => s.id === selected)) {
     selected = null;
     $('detail').hidden = true;
@@ -95,7 +120,7 @@ function selectSite(id, fly = true) {
   };
   const tag = document.createElement('span');
   tag.className = 'eyebrow';
-  tag.textContent = `${s.theme.toUpperCase()} · TEST SITE`;
+  tag.textContent = `${s.theme.toUpperCase()} · ${s.id}`;
   const h = document.createElement('h2');
   h.textContent = s.title;
   const date = document.createElement('div');
@@ -105,11 +130,28 @@ function selectSite(id, fly = true) {
   p.textContent = s.description;
   const meta = document.createElement('div');
   meta.className = 'meta';
-  meta.textContent = `${s.region} · Approximate location\nIllustrative age range. No verified sources attached.`;
+  meta.textContent = s.inceptionDates.map(d =>
+    `Recorded inception: ${d.value.split('T')[0]} · ${d.precisionLabel} precision · ${d.calendarModel.endsWith('/Q1985727') ? 'Gregorian' : d.calendarModel.endsWith('/Q1985786') ? 'Julian' : d.calendarModel}`
+  ).join('\n');
   const disclaimer = document.createElement('p');
   disclaimer.className = 'fine';
-  disclaimer.textContent = 'This record is synthetic. Replace it with sourced archaeological evidence before treating the atlas as a historical reference.';
+  disclaimer.textContent = 'Timeline uses the recorded inception year as an approximate point, in years before 1950 (BP).'
+    + (s.inceptionDates.length > 1 ? ' The oldest recorded inception is used; all values are listed above.' : '')
+    + (s.coordinateCandidates.length > 1 ? ` Showing the first of ${s.coordinateCandidates.length} recorded locations.` : '');
   a.append(close, tag, h, date, p, meta, disclaimer);
+  const links = document.createElement('div');
+  links.className = 'source-links';
+  for (const [label, url] of [['Wikipedia', s.wikipediaUrls[0]], ['Wikidata', s.wikidataUrl]]) {
+    const parsed = new URL(url);
+    if (!['en.wikipedia.org', 'www.wikidata.org'].includes(parsed.hostname) || !['https:', 'http:'].includes(parsed.protocol)) continue;
+    const link = document.createElement('a');
+    link.href = parsed.href;
+    link.textContent = label;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    links.append(link);
+  }
+  a.append(links);
   if (journeyIndex >= 0) {
     const foot = document.createElement('footer');
     const prev = document.createElement('button');
@@ -155,7 +197,7 @@ function createMap(token) {
   $('maperror').hidden = true;
   const lib = token ? window.mapboxgl : window.maplibregl;
   if (!lib) {
-    mapFailure('The map library could not load. Check your connection and reload. You can still browse the sample sites.');
+    mapFailure('The map library could not load. Check your connection and reload. You can still browse the sites.');
     return;
   }
   try {
@@ -228,8 +270,8 @@ $('time').oninput = e => {
 $('alltime').onclick = () => {
   stop();
   allTime = true;
-  threshold = 10000;
-  $('time').value = 10000;
+  threshold = timelineMin;
+  $('time').value = timelineMin;
   refresh();
 };
 $('play').onclick = () => {
@@ -238,15 +280,15 @@ $('play').onclick = () => {
     return;
   }
   allTime = false;
-  threshold = 300000;
+  threshold = timelineMax;
   $('time').value = threshold;
   refresh();
   $('play').textContent = 'Ⅱ Pause';
   timer = setInterval(() => {
-    threshold = Math.max(10000, threshold - 5000);
+    threshold = Math.max(timelineMin, threshold - 250);
     $('time').value = threshold;
     refresh();
-    if (threshold === 10000) stop();
+    if (threshold === timelineMin) stop();
   }, 350);
 };
 $('reset').onclick = () => {
@@ -296,9 +338,13 @@ $('demo').onclick = () => {
 
 async function init() {
   try {
-    const r = await fetch('sites.json');
+    const r = await fetch('data/candidates.json', { cache: 'no-store' });
     if (!r.ok) throw Error();
-    data = await r.json();
+    data = importedSites(await r.json());
+    threshold = timelineMin;
+    $('time').min = timelineMin;
+    $('time').max = timelineMax;
+    $('time').value = timelineMin;
     refresh();
     let token = '';
     try {
@@ -311,7 +357,7 @@ async function init() {
       const controller = new AbortController();
       const tool = {
         name: 'explore_atlas_site',
-        description: 'Select an illustrative history site and navigate the visible atlas to it.',
+        description: 'Select an imported archaeological site and navigate the visible atlas to it.',
         inputSchema: {
           type: 'object',
           properties: {
@@ -336,7 +382,7 @@ async function init() {
           selectSite(input.siteId);
           return {
             selectedSiteId: selected,
-            testData: true
+            testData: false
           };
         }
       };
@@ -348,7 +394,7 @@ async function init() {
       });
     }
   } catch (e) {
-    $('sites').textContent = 'The sample dataset could not load. Reload to try again.';
+    $('sites').textContent = 'The imported dataset could not load. Run the Wikidata importer, then reload to try again.';
   }
 }
 init();
