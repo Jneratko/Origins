@@ -382,6 +382,9 @@ input[type=search], #token {
   font-size: 13px;
   padding: 7px 12px;
 }
+.timeline[data-collapsed="true"] .timehead { margin-bottom: 0; flex-wrap: nowrap; }
+.timeline[data-collapsed="true"] .timehead > div { flex-basis: auto; }
+.workspace:has(.timeline[data-collapsed="true"]) .legend { bottom: 130px; }
 
 .timeline label {
   font-size: 12px;

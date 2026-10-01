@@ -92,7 +92,7 @@
           <span><i class="Origins"></i>Archaeological site</span>
         </div>
 
-        <div class="timeline">
+        <div class="timeline" id="timeline">
           <div class="timehead">
             <div>
               <span class="eyebrow">TRAVEL THROUGH TIME</span>
@@ -100,8 +100,10 @@
             </div>
             <button id="play" aria-label="Play timeline">▶ Play</button>
             <button id="alltime">All time</button>
+            <button id="toggleTimeline" type="button" aria-expanded="true" aria-controls="timelineControls" aria-label="Collapse timeline">Collapse</button>
           </div>
 
+          <div id="timelineControls">
           <label for="time" id="timedesc">Show sites cumulatively through the selected calendar year. The oldest position groups sites dated before 8,050 BCE.</label>
           <input
             id="time"
@@ -123,6 +125,7 @@
           <div class="timefoot">
             <span>Modern geography · approximate locations</span>
             <span>Prehistoric archaeology</span>
+          </div>
           </div>
         </div>
       </section>

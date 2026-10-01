@@ -402,6 +402,17 @@ function createMap(token) {
   }
 }
 $('sites').onscroll = () => renderSiteRows();
+let timelineCollapsed = false;
+$('toggleTimeline').onclick = () => {
+  timelineCollapsed = !timelineCollapsed;
+  $('timelineControls').hidden = timelineCollapsed;
+  $('play').hidden = timelineCollapsed;
+  $('alltime').hidden = timelineCollapsed;
+  $('timeline').setAttribute('data-collapsed', String(timelineCollapsed));
+  $('toggleTimeline').textContent = timelineCollapsed ? 'Expand' : 'Collapse';
+  $('toggleTimeline').setAttribute('aria-expanded', String(!timelineCollapsed));
+  $('toggleTimeline').setAttribute('aria-label', timelineCollapsed ? 'Expand timeline' : 'Collapse timeline');
+};
 $('countrySearch').oninput = e => {
   const text = e.target.value.trim().toLowerCase();
   for (const option of $('country').children) {
