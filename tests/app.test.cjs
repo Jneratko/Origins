@@ -142,7 +142,7 @@ test('country filtering combines with description search and supports missing co
   get('search').oninput({ target: { value: 'painted' } });
   assert.equal(get('sites').children.length, 1);
   get('sites').children[0].onclick();
-  assert.ok(get('detail').children.some(c => c.textContent === 'Painted cave'));
+  assert.ok(get('detail').children.some(c => c.textContent === 'Painted cave.'));
   assert.ok(get('detail').children.some(c => c.textContent?.includes('Country: Spain, France')));
   get('country').onchange({ target: { value: 'unknown' } });
   assert.equal(get('sites').children.length, 1);
@@ -161,5 +161,31 @@ test('active dataset populates the country dropdown and displays imported descri
   get('search').oninput({ target: { value: 'capital city of Egypt' } });
   assert.equal(get('sites').children.length, 1);
   get('sites').children[0].onclick();
-  assert.ok(get('detail').children.some(c => c.textContent === 'capital city of Egypt'));
+  assert.ok(get('detail').children.some(c => c.textContent === 'Capital city of Egypt.'));
+});
+
+test('timeline retains visible markers and only adds or removes sites crossing the threshold', async () => {
+  const fixture = { records: ['-9000', '-7900', '-7000'].map((year, index) => ({
+    ...dataset.records[0], id: `Q${index + 1}`, title: `Fixture ${index}`,
+    inceptionDates: [{ ...dataset.records[0].inceptionDates[0], value: `${year}-01-01T00:00:00Z` }]
+  })) };
+  const app = await boot(fixture);
+  const get = id => app.elements.get(id);
+  const oldest = app.markers[0];
+  get('play').onclick();
+  assert.deepEqual(app.markers.filter(m => !m.removed), [oldest]);
+  app.tick(); // 9750 BP: second site appears.
+  const second = app.markers.find(m => !m.removed && m.atlasSiteId === 'Q2');
+  assert.ok(second);
+  assert.equal(oldest.removed, undefined);
+  const created = app.markers.length;
+  app.tick(); // 9500 BP: no sites change visibility.
+  assert.equal(app.markers.length, created);
+  assert.equal(second.removed, undefined);
+  get('time').oninput({ target: { value: '10000' } });
+  assert.equal(second.removed, true);
+  assert.equal(oldest.removed, undefined);
+  get('alltime').onclick();
+  assert.equal(oldest.removed, undefined);
+  assert.equal(app.markers.filter(m => !m.removed).length, 3);
 });

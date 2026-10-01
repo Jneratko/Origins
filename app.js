@@ -19,6 +19,12 @@ const colors = {
   Archaeology: '#e7bc7a'
 };
 const fmt = n => n.toLocaleString('en-US');
+function formatDescription(value) {
+  const text = typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : '';
+  if (!text) return 'Explore this archaeological site through its Wikipedia article and Wikidata record.';
+  const sentence = text.replace(/\p{L}/u, letter => letter.toLocaleUpperCase('en-US'));
+  return /[.!?…]["'”’\)\]]*$/.test(sentence) ? sentence : `${sentence}.`;
+}
 const age = s => `≈ ${fmt(s.ageOlder)} years BP`;
 let timelineMin = 1950; // Updated from the latest imported timeline point.
 const timelineMax = 10000; // Oldest position groups all dates older than 10k BP.
@@ -43,7 +49,7 @@ function importedSites(dataset) {
     const countries = record.countries || [];
     return { ...record, coordinates, ageOlder, timelineDate, theme: 'Archaeology',
       countries, region: countries.map(c => c.title).join(', ') || 'Country not recorded',
-      description: record.description || 'Explore this archaeological site through its Wikipedia article and Wikidata record.',
+      description: formatDescription(record.description),
       isTestData: false };
   });
 }
@@ -88,19 +94,27 @@ function refresh() {
     p.textContent = 'No sites match. Try another search or time.';
     $('sites').append(p);
   }
-  for (const m of markers) m.remove();
-  markers = [];
+  const visibleIds = new Set(list.map(s => s.id));
+  markers = markers.filter(marker => {
+    if (visibleIds.has(marker.atlasSiteId)) return true;
+    marker.remove();
+    return false;
+  });
   if (map) {
     const lib = map._atlasLib;
+    const existingIds = new Set(markers.map(marker => marker.atlasSiteId));
     for (const s of list) {
+      if (existingIds.has(s.id)) continue;
       const el = document.createElement('button');
       el.className = 'marker';
       el.style.background = colors[s.theme];
       el.setAttribute('aria-label', `${s.title}, ${s.theme}, ${age(s)}`);
       el.onclick = () => selectSite(s.id);
-      markers.push(new lib.Marker({
+      const marker = new lib.Marker({
         element: el
-      }).setLngLat(s.coordinates).addTo(map));
+      }).setLngLat(s.coordinates).addTo(map);
+      marker.atlasSiteId = s.id;
+      markers.push(marker);
     }
   }
   $('timeLabel').textContent = allTime ? 'All imported dates' : timelineLabel();
