@@ -27,7 +27,7 @@ body {
   font: 16px/1.5 system-ui, sans-serif;
 }
 
-button, input {
+button, input, select {
   font: inherit;
 }
 
@@ -45,9 +45,19 @@ button:hover {
   background: #293944;
 }
 
-button:focus-visible, input:focus-visible {
+button:focus-visible, input:focus-visible, select:focus-visible {
   outline: 2px solid var(--gold);
   outline-offset: 3px;
+}
+
+#country {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 20px;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 7px;
 }
 
 header {

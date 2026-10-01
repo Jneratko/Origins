@@ -6,6 +6,7 @@ let data = [],
   markers = [],
   theme = 'all',
   query = '',
+  country = 'all',
   threshold = 1950,
   allTime = true,
   selected = null,
@@ -39,14 +40,19 @@ function importedSites(dataset) {
     const oldestYear = Math.min(...years);
     const ageOlder = 1950 - oldestYear;
     const timelineDate = dates[years.indexOf(oldestYear)];
+    const countries = record.countries || [];
     return { ...record, coordinates, ageOlder, timelineDate, theme: 'Archaeology',
-      region: record.id, description: 'Explore this archaeological site through its Wikipedia article and Wikidata record.',
+      countries, region: countries.map(c => c.title).join(', ') || 'Country not recorded',
+      description: record.description || 'Explore this archaeological site through its Wikipedia article and Wikidata record.',
       isTestData: false };
   });
 }
 
 function visible() {
-  return data.filter(s => (theme === 'all' || s.theme === theme) && (!query || `${s.title} ${s.region} ${s.description}`.toLowerCase().includes(query)) && (allTime || (threshold === timelineMax ? s.ageOlder > timelineMax : s.ageOlder >= threshold)));
+  return data.filter(s => (theme === 'all' || s.theme === theme) &&
+    (country === 'all' || (country === 'unknown' ? !s.countries.length : s.countries.some(c => c.id === country))) &&
+    (!query || `${s.id} ${s.title} ${s.region} ${s.description}`.toLowerCase().includes(query)) &&
+    (allTime || (threshold === timelineMax ? s.ageOlder > timelineMax : s.ageOlder >= threshold)));
 }
 
 function stop() {
@@ -137,7 +143,7 @@ function selectSite(id, fly = true) {
   p.textContent = s.description;
   const meta = document.createElement('div');
   meta.className = 'meta';
-  meta.textContent = s.inceptionDates.map(d =>
+  meta.textContent = `Country: ${s.region}\n` + s.inceptionDates.map(d =>
     `Recorded inception: ${d.value.split('T')[0]} · ${d.precisionLabel} precision · ${d.calendarModel.endsWith('/Q1985727') ? 'Gregorian' : d.calendarModel.endsWith('/Q1985786') ? 'Julian' : d.calendarModel}`
   ).join('\n');
   const disclaimer = document.createElement('p');
@@ -261,6 +267,11 @@ $('search').oninput = e => {
   journeyIndex = -1;
   refresh();
 };
+$('country').onchange = e => {
+  country = e.target.value;
+  journeyIndex = -1;
+  refresh();
+};
 document.querySelectorAll('[data-theme]').forEach(b => b.onclick = () => {
   theme = b.dataset.theme;
   journeyIndex = -1;
@@ -313,6 +324,8 @@ $('journey').onclick = () => {
   allTime = true;
   theme = 'all';
   query = '';
+  country = 'all';
+  $('country').value = 'all';
   $('search').value = '';
   document.querySelectorAll('[data-theme]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.theme === 'all')));
   journeyIndex = -1;
@@ -349,6 +362,20 @@ async function init() {
     const r = await fetch('data/candidates.json', { cache: 'no-store' });
     if (!r.ok) throw Error();
     data = importedSites(await r.json());
+    const countries = [...new Map(data.flatMap(s => s.countries).map(c => [c.id, c])).values()]
+      .sort((a, b) => a.title.localeCompare(b.title));
+    for (const c of countries) {
+      const option = document.createElement('option');
+      option.value = c.id;
+      option.textContent = c.title;
+      $('country').append(option);
+    }
+    if (data.some(s => !s.countries.length)) {
+      const option = document.createElement('option');
+      option.value = 'unknown';
+      option.textContent = 'Country not recorded';
+      $('country').append(option);
+    }
     // Round down to a slider step so every site's timeline point is reachable.
     timelineMin = Math.min(1950, Math.floor(Math.min(...data.map(s => s.ageOlder)) / 50) * 50);
     $('timedesc').textContent = `Show sites cumulatively through ${calendarLabel(timelineMin)}. The oldest position groups dates older than 10k years (before 1950).`;
@@ -391,6 +418,8 @@ async function init() {
           allTime = true;
           theme = 'all';
           query = '';
+          country = 'all';
+          $('country').value = 'all';
           $('search').value = '';
           document.querySelectorAll('[data-theme]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.theme === 'all')));
           refresh();

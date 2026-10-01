@@ -53,17 +53,27 @@ for (const [index, row] of rows.entries()) {
     const precision = Number(value(row.datePrecision));
     const calendarModel = value(row.calendarModel);
     const article = value(row.article);
+    const description = value(row.siteDescription);
+    const countryUrl = value(row.country);
+    const countryId = /^https?:\/\/www\.wikidata\.org\/entity\/(Q\d+)$/.exec(countryUrl)?.[1];
+    const countryLabel = value(row.countryLabel);
     if (!id || !title) throw new Error('Missing valid Wikidata ID or title.');
     if (!coordinates || coordinates.some(n => !Number.isFinite(n)) || Math.abs(coordinates[0]) > 180 || Math.abs(coordinates[1]) > 90) throw new Error('Invalid coordinate point.');
     if (!/^[+-]?\d{4,}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/.test(date)) throw new Error('Invalid inception date.');
     if (value(row.datePrecision) === undefined || !Number.isInteger(precision) || precision < 0 || precision > 14) throw new Error('Invalid date precision.');
     if (!/^https?:\/\/www\.wikidata\.org\/entity\/Q\d+$/.test(calendarModel)) throw new Error('Missing calendar model.');
     if (!/^https:\/\/en\.wikipedia\.org\/wiki\/.+/.test(article)) throw new Error('Missing English Wikipedia article.');
+    if (countryUrl !== undefined && !countryId) throw new Error('Invalid country entity.');
     if (!sites.has(id)) sites.set(id, {
       id, title, wikidataUrl: siteUrl, wikipediaUrls: [], coordinateCandidates: [],
+      description: '', countries: [],
       inceptionDates: [], reviewStatus: 'unreviewed', reviewFlags: ['date-meaning-unverified']
     });
     const site = sites.get(id);
+    if (typeof description === 'string' && description.trim()) site.description = description.trim();
+    if (countryId && !site.countries.some(c => c.id === countryId)) {
+      site.countries.push({ id: countryId, title: countryLabel || countryId, wikidataUrl: countryUrl });
+    }
     if (!site.wikipediaUrls.includes(article)) site.wikipediaUrls.push(article);
     if (!site.coordinateCandidates.some(p => p[0] === coordinates[0] && p[1] === coordinates[1])) site.coordinateCandidates.push(coordinates);
     const dateRecord = { value: date, precision, precisionLabel: precisionNames[precision], calendarModel, property: 'P571' };

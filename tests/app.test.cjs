@@ -127,3 +127,24 @@ test('malformed imported records produce a visible load error', async () => {
   const app = await boot({ records: [{ id: 'Q1', coordinateCandidates: [[999, 0]], inceptionDates: [] }] });
   assert.match(app.elements.get('sites').textContent, /imported dataset could not load/);
 });
+
+test('country filtering combines with description search and supports missing countries', async () => {
+  const fixture = { records: [
+    { ...dataset.records[0], id: 'Q1', title: 'First', description: 'Painted cave', countries: [{ id: 'Q29', title: 'Spain' }, { id: 'Q142', title: 'France' }] },
+    { ...dataset.records[0], id: 'Q2', title: 'Second', description: 'Ancient settlement', countries: [{ id: 'Q142', title: 'France' }] },
+    { ...dataset.records[0], id: 'Q3', title: 'Third', description: 'Painted shelter', countries: [] }
+  ] };
+  const app = await boot(fixture);
+  const get = id => app.elements.get(id);
+  assert.equal(get('country').children.filter(c => c.value === 'Q142').length, 1);
+  get('country').onchange({ target: { value: 'Q142' } });
+  assert.equal(get('sites').children.length, 2);
+  get('search').oninput({ target: { value: 'painted' } });
+  assert.equal(get('sites').children.length, 1);
+  get('sites').children[0].onclick();
+  assert.ok(get('detail').children.some(c => c.textContent === 'Painted cave'));
+  assert.ok(get('detail').children.some(c => c.textContent?.includes('Country: Spain, France')));
+  get('country').onchange({ target: { value: 'unknown' } });
+  assert.equal(get('sites').children.length, 1);
+  assert.equal(get('sites').children[0].children[1].children[0].textContent, 'Third');
+});
