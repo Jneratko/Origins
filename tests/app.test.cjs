@@ -148,3 +148,18 @@ test('country filtering combines with description search and supports missing co
   assert.equal(get('sites').children.length, 1);
   assert.equal(get('sites').children[0].children[1].children[0].textContent, 'Third');
 });
+
+test('active dataset populates the country dropdown and displays imported descriptions', async () => {
+  const app = await boot();
+  const get = id => app.elements.get(id);
+  const countryIds = new Set(dataset.records.flatMap(r => r.countries || []).map(c => c.id));
+  assert.ok(countryIds.size > 0);
+  assert.equal(get('country').children.filter(c => countryIds.has(c.value)).length, countryIds.size);
+  get('country').onchange({ target: { value: 'Q79' } });
+  const expected = dataset.records.filter(r => r.countries.some(c => c.id === 'Q79'));
+  assert.equal(get('sites').children.length, expected.length);
+  get('search').oninput({ target: { value: 'capital city of Egypt' } });
+  assert.equal(get('sites').children.length, 1);
+  get('sites').children[0].onclick();
+  assert.ok(get('detail').children.some(c => c.textContent === 'capital city of Egypt'));
+});
