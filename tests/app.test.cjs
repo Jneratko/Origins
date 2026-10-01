@@ -16,7 +16,7 @@ class Element {
 
 async function boot(input = dataset) {
   const elements = new Map();
-  const markers = [];
+  let map;
   const requests = [];
   const mapEvents = {};
   let tick;
@@ -29,18 +29,18 @@ async function boot(input = dataset) {
     querySelectorAll: () => []
   };
   class MapStub {
+    constructor() { map = this; this.sources = {}; this.layers = {}; this.filters = []; }
     addControl() {}
-    on(name, callback) { mapEvents[name] = callback; }
+    on(name, layer, callback) { mapEvents[callback ? `${name}:${layer}` : name] = callback || layer; }
+    addSource(id, source) { this.sources[id] = source; }
+    addLayer(layer) { this.layers[layer.id] = layer; }
+    getLayer(id) { return this.layers[id]; }
+    setFilter(id, filter) { this.layers[id].filter = filter; this.filters.push(filter); }
+    getCanvas() { return { style: {} }; }
     flyTo(value) { this.lastFlight = value; }
   }
-  class MarkerStub {
-    constructor({ element }) { this.element = element; }
-    setLngLat(point) { this.point = point; return this; }
-    addTo() { markers.push(this); return this; }
-    remove() { this.removed = true; }
-  }
   const context = vm.createContext({
-    document, window: { maplibregl: { Map: MapStub, Marker: MarkerStub, NavigationControl: class {} } },
+    document, window: { maplibregl: { Map: MapStub, NavigationControl: class {} } },
     URL, localStorage: { getItem: () => null }, console,
     fetch: async (url, options) => { requests.push({ url, options }); return { ok: true, json: async () => input }; },
     clearInterval: () => {}, setInterval: callback => { tick = callback; return 1; }
@@ -48,7 +48,7 @@ async function boot(input = dataset) {
   vm.runInContext(fs.readFileSync(path.join(root, 'app.js'), 'utf8'), context);
   await new Promise(resolve => setImmediate(resolve));
   if (mapEvents.load) mapEvents.load();
-  return { context, elements, markers, requests, tick: () => tick() };
+  return { context, elements, map, mapEvents, requests, tick: () => tick() };
 }
 
 test('imports unique sites, plots numeric locations, searches and displays source details', async () => {
@@ -56,12 +56,13 @@ test('imports unique sites, plots numeric locations, searches and displays sourc
   const get = id => app.elements.get(id);
   assert.equal(app.requests[0].url, 'data/candidates.json');
   assert.equal(app.requests[0].options.cache, 'no-store');
-  assert.equal(get('sites').children.length, dataset.records.length);
-  assert.equal(app.markers.filter(m => !m.removed).length, dataset.records.length);
-  assert.ok(app.markers.every(m => m.point.every(Number.isFinite)));
+  assert.ok(get('siteRows').children.length <= 11);
+  assert.equal(get('count').textContent, `${dataset.records.length} / ${dataset.records.length}`);
+  assert.equal(app.map.sources['atlas-sites'].data.features.length, dataset.records.length);
+  assert.ok(app.map.sources['atlas-sites'].data.features.every(f => f.geometry.coordinates.every(Number.isFinite)));
   get('search').oninput({ target: { value: 'Altamira' } });
-  assert.equal(get('sites').children.length, 1);
-  get('sites').children[0].onclick();
+  assert.equal(get('siteRows').children.length, 1);
+  get('siteRows').children[0].onclick();
   const detail = get('detail');
   assert.equal(detail.hidden, false);
   assert.ok(detail.children.some(e => e.textContent?.includes('millennium precision')));
@@ -79,34 +80,34 @@ test('timeline groups older than 10k and plays through the latest imported year'
   const app = await boot(fixture);
   const get = id => app.elements.get(id);
   get('time').oninput({ target: { value: '10000' } });
-  assert.equal(get('sites').children.length, 1);
+  assert.equal(get('siteRows').children.length, 1);
   assert.equal(get('timeLabel').textContent, 'Older than 10k years');
   get('time').oninput({ target: { value: '1950' } });
-  assert.equal(get('sites').children.length, 3);
+  assert.equal(get('siteRows').children.length, 3);
   assert.equal(get('timeLabel').textContent, 'Year 0');
   get('alltime').onclick();
-  assert.equal(get('sites').children.length, 4);
+  assert.equal(get('siteRows').children.length, 4);
   get('play').onclick();
   assert.equal(get('play').attributes['aria-label'], 'Pause timeline');
   for (let i = 0; i < 60; i++) app.tick();
-  assert.equal(get('sites').children.length, 4);
+  assert.equal(get('siteRows').children.length, 4);
   assert.equal(get('timeLabel').textContent, '≈ 100 CE');
   assert.equal(get('play').textContent, '▶ Play');
   assert.equal(get('play').attributes['aria-label'], 'Play timeline');
   assert.equal(Number(get('time').value), Number(get('time').min));
 });
 
-test('selection preserves list buttons and map markers used by keyboard navigation', async () => {
+test('selection preserves list buttons and the map source', async () => {
   const app = await boot();
-  const buttons = [...app.elements.get('sites').children];
-  const markers = app.markers.filter(m => !m.removed);
+  const buttons = [...app.elements.get('siteRows').children];
+  const source = app.map.sources['atlas-sites'];
   buttons[0].onclick();
-  assert.deepEqual(app.elements.get('sites').children, buttons);
+  assert.deepEqual(app.elements.get('siteRows').children, buttons);
   assert.equal(buttons[0].className, 'site active');
-  markers[1].element.onclick();
+  app.mapEvents['click:atlas-sites']({ features: [{ properties: { siteId: buttons[1].atlasSiteId } }] });
   assert.equal(buttons[0].className, 'site');
   assert.equal(buttons[1].className, 'site active');
-  assert.deepEqual(app.markers.filter(m => !m.removed), markers);
+  assert.equal(app.map.sources['atlas-sites'], source);
 });
 
 test('playback reaches all sites in the active dataset and manual pause updates its label', async () => {
@@ -119,7 +120,8 @@ test('playback reaches all sites in the active dataset and manual pause updates 
   assert.equal(get('play').attributes['aria-label'], 'Play timeline');
   get('play').onclick();
   for (let i = 0; i < 40; i++) app.tick();
-  assert.equal(get('sites').children.length, dataset.records.length);
+  assert.ok(get('siteRows').children.length <= 11);
+  assert.equal(get('count').textContent, `${dataset.records.length} / ${dataset.records.length}`);
   assert.equal(get('timeLabel').textContent, '≈ 1,500 CE');
 });
 
@@ -138,15 +140,15 @@ test('country filtering combines with description search and supports missing co
   const get = id => app.elements.get(id);
   assert.equal(get('country').children.filter(c => c.value === 'Q142').length, 1);
   get('country').onchange({ target: { value: 'Q142' } });
-  assert.equal(get('sites').children.length, 2);
+  assert.equal(get('siteRows').children.length, 2);
   get('search').oninput({ target: { value: 'painted' } });
-  assert.equal(get('sites').children.length, 1);
-  get('sites').children[0].onclick();
+  assert.equal(get('siteRows').children.length, 1);
+  get('siteRows').children[0].onclick();
   assert.ok(get('detail').children.some(c => c.textContent === 'Painted cave.'));
   assert.ok(get('detail').children.some(c => c.textContent?.includes('Country: Spain, France')));
   get('country').onchange({ target: { value: 'unknown' } });
-  assert.equal(get('sites').children.length, 1);
-  assert.equal(get('sites').children[0].children[1].children[0].textContent, 'Third');
+  assert.equal(get('siteRows').children.length, 1);
+  assert.equal(get('siteRows').children[0].children[1].children[0].textContent, 'Third');
 });
 
 test('active dataset populates the country dropdown and displays imported descriptions', async () => {
@@ -157,35 +159,42 @@ test('active dataset populates the country dropdown and displays imported descri
   assert.equal(get('country').children.filter(c => countryIds.has(c.value)).length, countryIds.size);
   get('country').onchange({ target: { value: 'Q79' } });
   const expected = dataset.records.filter(r => r.countries.some(c => c.id === 'Q79'));
-  assert.equal(get('sites').children.length, expected.length);
+  assert.equal(get('count').textContent, `${expected.length} / ${dataset.records.length}`);
   get('search').oninput({ target: { value: 'capital city of Egypt' } });
-  assert.equal(get('sites').children.length, 1);
-  get('sites').children[0].onclick();
+  assert.equal(get('siteRows').children.length, 1);
+  get('siteRows').children[0].onclick();
   assert.ok(get('detail').children.some(c => c.textContent === 'Capital city of Egypt.'));
 });
 
-test('timeline retains visible markers and only adds or removes sites crossing the threshold', async () => {
-  const fixture = { records: ['-9000', '-7900', '-7000'].map((year, index) => ({
-    ...dataset.records[0], id: `Q${index + 1}`, title: `Fixture ${index}`,
-    inceptionDates: [{ ...dataset.records[0].inceptionDates[0], value: `${year}-01-01T00:00:00Z` }]
+test('timeline updates layer filters without replacing the source or layer', async () => {
+  const app = await boot();
+  const source = app.map.sources['atlas-sites'];
+  const layer = app.map.layers['atlas-sites'];
+  app.elements.get('play').onclick();
+  assert.equal(JSON.stringify(layer.filter), JSON.stringify(['all', ['>', ['get', 'ageOlder'], 10000]]));
+  app.tick();
+  assert.equal(JSON.stringify(layer.filter), JSON.stringify(['all', ['>=', ['get', 'ageOlder'], 9750]]));
+  assert.equal(app.map.sources['atlas-sites'], source);
+  assert.equal(app.map.layers['atlas-sites'], layer);
+});
+
+test('50,000 sites use bounded sidebar rows and can scroll to the last site', async () => {
+  const fixture = { records: Array.from({ length: 50000 }, (_, index) => ({
+    ...dataset.records[0], id: `Q${index + 1}`, title: `Site ${index}`
   })) };
   const app = await boot(fixture);
-  const get = id => app.elements.get(id);
-  const oldest = app.markers[0];
-  get('play').onclick();
-  assert.deepEqual(app.markers.filter(m => !m.removed), [oldest]);
-  app.tick(); // 9750 BP: second site appears.
-  const second = app.markers.find(m => !m.removed && m.atlasSiteId === 'Q2');
-  assert.ok(second);
-  assert.equal(oldest.removed, undefined);
-  const created = app.markers.length;
-  app.tick(); // 9500 BP: no sites change visibility.
-  assert.equal(app.markers.length, created);
-  assert.equal(second.removed, undefined);
-  get('time').oninput({ target: { value: '10000' } });
-  assert.equal(second.removed, true);
-  assert.equal(oldest.removed, undefined);
-  get('alltime').onclick();
-  assert.equal(oldest.removed, undefined);
-  assert.equal(app.markers.filter(m => !m.removed).length, 3);
+  const viewport = app.elements.get('sites');
+  const container = app.elements.get('siteRows');
+  assert.ok(container.children.length <= 11);
+  assert.equal(app.map.sources['atlas-sites'].data.features.length, 50000);
+  viewport.scrollTop = 50000 * 72;
+  viewport.onscroll();
+  assert.ok(container.children.length <= 11);
+  const last = container.children.at(-1);
+  assert.equal(last.atlasSiteId, 'Q50000');
+  last.onclick();
+  assert.equal(app.elements.get('detail').hidden, false);
+  app.elements.get('search').oninput({ target: { value: 'Site 49999' } });
+  assert.equal(container.children.length, 1);
+  assert.equal(container.children[0].atlasSiteId, 'Q50000');
 });

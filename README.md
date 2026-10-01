@@ -143,3 +143,9 @@ The timeline is cumulative: sites appear when `ageOlder` is greater than or equa
 - An optional WebMCP site-selection tool is registered only in browsers exposing the required API. Ordinary atlas use does not require it.
 
 Run `node --test tests/*.test.cjs` for importer and app checks covering optional descriptions, multiple countries, country filtering with search, imported loading, marker coordinates, source details, cumulative timeline playback through the latest imported year, stable site controls during selection, accessible Play/Pause labels, and malformed-data errors. App checks use a simulated DOM and map; full browser layout, Mapbox token integration, and live Pages deployment remain unverified.
+
+## Rendering larger datasets
+
+Sites render as a WebGL circle layer with one GeoJSON source. Timeline, country, and search filters update the layer without replacing its data. The sidebar renders only a viewport of fixed-height rows; use scrolling or Arrow Up/Down, Home, and End to navigate. Source loading and full detail data still use the existing JSON import. Clustering, detail-file splitting, and batched Wikidata imports remain future work.
+
+The tests include a 50,000-site synthetic dataset to check bounded sidebar rendering, scrolling, and selection. This simulated test is not a browser performance benchmark.

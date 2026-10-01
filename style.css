@@ -204,6 +204,7 @@ input[type=search], #token {
 }
 
 .site {
+  height: 72px;
   display: flex;
   align-items: center;
   gap: 12px;
@@ -221,10 +222,21 @@ input[type=search], #token {
 }
 
 .site b {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   display: block;
   font-size: 14px;
   font-weight: 500;
 }
+
+#sites {
+  height: 350px;
+  overflow-y: auto;
+  overflow-anchor: none;
+}
+.site > div { min-width: 0; }
+.site small { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .site small {
   color: var(--muted);

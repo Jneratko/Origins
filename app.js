@@ -3,7 +3,8 @@
 const $ = id => document.getElementById(id);
 let data = [],
   map,
-  markers = [],
+  filteredSites = [],
+  sitesById = new Map(),
   theme = 'all',
   query = '',
   threshold = 1950,
@@ -57,7 +58,7 @@ function importedSites(dataset) {
 function visible() {
   return data.filter(s => (theme === 'all' || s.theme === theme) &&
     (country === 'all' || (country === 'unknown' ? !s.countries.length : s.countries.some(c => c.id === country))) &&
-    (!query || `${s.id} ${s.title} ${s.region} ${s.description}`.toLowerCase().includes(query)) &&
+    (!query || s.searchText.includes(query)) &&
     (allTime || (threshold === timelineMax ? s.ageOlder > timelineMax : s.ageOlder >= threshold)));
 }
 
@@ -68,11 +69,22 @@ function stop() {
   $('play').setAttribute('aria-label', 'Play timeline');
 }
 
-function refresh() {
-  const list = visible();
-  $('count').textContent = `${list.length} / ${data.length}`;
-  $('sites').replaceChildren();
-  for (const s of list) {
+const rowHeight = 72;
+function renderSiteRows() {
+  const container = $('sites');
+  const rowContainer = $('siteRows');
+  const viewport = container.clientHeight || 350;
+  const maxScroll = Math.max(0, filteredSites.length * rowHeight - viewport);
+  container.scrollTop = Math.min(container.scrollTop || 0, maxScroll);
+  const start = Math.max(0, Math.floor(container.scrollTop / rowHeight) - 3);
+  const end = Math.min(filteredSites.length, start + Math.ceil(viewport / rowHeight) + 6);
+  const rows = filteredSites.slice(start, end);
+  rowContainer.style.paddingTop = `${start * rowHeight}px`;
+  rowContainer.style.paddingBottom = `${(filteredSites.length - end) * rowHeight}px`;
+  if (rows.length && rowContainer.children.length === rows.length &&
+      rows.every((s, i) => rowContainer.children[i].atlasSiteId === s.id)) return;
+  rowContainer.replaceChildren();
+  for (const s of rows) {
     const b = document.createElement('button');
     b.className = 'site' + (selected === s.id ? ' active' : '');
     b.atlasSiteId = s.id;
@@ -85,38 +97,45 @@ function refresh() {
     sub.textContent = `${age(s)} · ${s.timelineDate.precisionLabel} precision`;
     text.append(name, sub);
     b.append(dot, text);
+    b.setAttribute('aria-posinset', filteredSites.indexOf(s) + 1);
+    b.setAttribute('aria-setsize', filteredSites.length);
     b.onclick = () => selectSite(s.id);
-    $('sites').append(b);
+    b.onkeydown = e => {
+      if (!['ArrowDown', 'ArrowUp', 'Home', 'End'].includes(e.key)) return;
+      e.preventDefault();
+      const index = filteredSites.indexOf(s);
+      const next = e.key === 'Home' ? 0 : e.key === 'End' ? filteredSites.length - 1
+        : Math.max(0, Math.min(filteredSites.length - 1, index + (e.key === 'ArrowDown' ? 1 : -1)));
+      container.scrollTop = next * rowHeight;
+      renderSiteRows();
+      [...rowContainer.children].find(b => b.atlasSiteId === filteredSites[next].id)?.focus();
+    };
+    rowContainer.append(b);
   }
-  if (!list.length) {
+  if (!filteredSites.length) {
     const p = document.createElement('p');
     p.className = 'empty';
     p.textContent = 'No sites match. Try another search or time.';
-    $('sites').append(p);
+    rowContainer.append(p);
   }
-  const visibleIds = new Set(list.map(s => s.id));
-  markers = markers.filter(marker => {
-    if (visibleIds.has(marker.atlasSiteId)) return true;
-    marker.remove();
-    return false;
-  });
-  if (map) {
-    const lib = map._atlasLib;
-    const existingIds = new Set(markers.map(marker => marker.atlasSiteId));
-    for (const s of list) {
-      if (existingIds.has(s.id)) continue;
-      const el = document.createElement('button');
-      el.className = 'marker';
-      el.style.background = colors[s.theme];
-      el.setAttribute('aria-label', `${s.title}, ${s.theme}, ${age(s)}`);
-      el.onclick = () => selectSite(s.id);
-      const marker = new lib.Marker({
-        element: el
-      }).setLngLat(s.coordinates).addTo(map);
-      marker.atlasSiteId = s.id;
-      markers.push(marker);
-    }
-  }
+}
+
+function pointFilter() {
+  const filters = ['all'];
+  if (theme !== 'all') filters.push(['==', ['get', 'theme'], theme]);
+  if (country === 'unknown') filters.push(['==', ['length', ['get', 'countries']], 0]);
+  else if (country !== 'all') filters.push(['in', country, ['get', 'countries']]);
+  if (query) filters.push(['in', query, ['get', 'searchText']]);
+  if (!allTime) filters.push([threshold === timelineMax ? '>' : '>=', ['get', 'ageOlder'], threshold]);
+  return filters;
+}
+
+function refresh() {
+  const list = visible();
+  filteredSites = list;
+  $('count').textContent = `${list.length} / ${data.length}`;
+  renderSiteRows();
+  if (map?.getLayer('atlas-sites')) map.setFilter('atlas-sites', pointFilter());
   $('timeLabel').textContent = allTime ? 'All imported dates' : timelineLabel();
   $('time').setAttribute('aria-valuetext', timelineLabel());
   if (selected && !list.some(s => s.id === selected)) {
@@ -126,11 +145,11 @@ function refresh() {
 }
 
 function selectSite(id, fly = true) {
-  const s = data.find(x => x.id === id);
+  const s = sitesById.get(id);
   if (!s) throw new Error('Unknown site');
   selected = id;
   // Selection does not change the filters. Keep the existing controls and focus.
-  for (const button of $('sites').children) {
+  for (const button of $('siteRows').children) {
     if (button.atlasSiteId) button.className = 'site' + (button.atlasSiteId === selected ? ' active' : '');
   }
   const a = $('detail');
@@ -216,8 +235,6 @@ function mapFailure(message) {
 
 function createMap(token) {
   if (map) {
-    markers.forEach(m => m.remove());
-    markers = [];
     map.remove();
     map = null;
   }
@@ -259,7 +276,25 @@ function createMap(token) {
     map.addControl(new lib.NavigationControl({
       showCompass: false
     }), 'top-right');
+    const currentMap = map;
     map.on('load', () => {
+      if (map !== currentMap) return;
+      map.addSource('atlas-sites', { type: 'geojson', data: {
+        type: 'FeatureCollection', features: data.map(s => ({
+          type: 'Feature', id: s.id, geometry: { type: 'Point', coordinates: s.coordinates },
+          properties: { siteId: s.id, ageOlder: s.ageOlder, theme: s.theme,
+            countries: s.countries.map(c => c.id), searchText: s.searchText }
+        }))
+      }});
+      map.addLayer({ id: 'atlas-sites', type: 'circle', source: 'atlas-sites',
+        paint: { 'circle-radius': 6, 'circle-color': colors.Archaeology,
+          'circle-stroke-width': 2, 'circle-stroke-color': '#152330' }, filter: pointFilter() });
+      map.on('click', 'atlas-sites', e => {
+        const id = e.features?.[0]?.properties?.siteId;
+        if (sitesById.has(id)) selectSite(id);
+      });
+      map.on('mouseenter', 'atlas-sites', () => { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', 'atlas-sites', () => { map.getCanvas().style.cursor = ''; });
       refresh();
       $('mapmode').textContent = token ? 'Mapbox · modern geography' : 'Demo basemap · Mapbox ready';
       if (token) map.setFog({
@@ -276,13 +311,16 @@ function createMap(token) {
     mapFailure('The map could not start. Your browser may not support WebGL. Site details are still available.');
   }
 }
+$('sites').onscroll = () => renderSiteRows();
 $('search').oninput = e => {
   query = e.target.value.toLowerCase().trim();
+  $('sites').scrollTop = 0;
   journeyIndex = -1;
   refresh();
 };
 $('country').onchange = e => {
   country = e.target.value;
+  $('sites').scrollTop = 0;
   journeyIndex = -1;
   refresh();
 };
@@ -376,6 +414,8 @@ async function init() {
     const r = await fetch('data/candidates.json', { cache: 'no-store' });
     if (!r.ok) throw Error();
     data = importedSites(await r.json());
+    sitesById = new Map(data.map(s => [s.id, s]));
+    for (const s of data) s.searchText = `${s.id} ${s.title} ${s.region} ${s.description}`.toLowerCase();
     const countries = [...new Map(data.flatMap(s => s.countries).map(c => [c.id, c])).values()]
       .sort((a, b) => a.title.localeCompare(b.title));
     for (const c of countries) {
@@ -391,7 +431,7 @@ async function init() {
       $('country').append(option);
     }
     // Round down to a slider step so every site's timeline point is reachable.
-    timelineMin = Math.min(1950, Math.floor(Math.min(...data.map(s => s.ageOlder)) / 50) * 50);
+    timelineMin = Math.min(1950, Math.floor(data.reduce((min, s) => Math.min(min, s.ageOlder), Infinity) / 50) * 50);
     $('timedesc').textContent = `Show sites cumulatively through ${calendarLabel(timelineMin)}. The oldest position groups dates older than 10k years (before 1950).`;
     $('tickMiddleOlder').textContent = calendarLabel(timelineMax - (timelineMax - timelineMin) / 3);
     $('tickMiddleYounger').textContent = calendarLabel(timelineMax - 2 * (timelineMax - timelineMin) / 3);
