@@ -11,10 +11,11 @@ class Element {
   append(...nodes) { this.children.push(...nodes); }
   replaceChildren(...nodes) { this.children = nodes; }
   setAttribute(key, value) { this.attributes[key] = value; }
+  contains(node) { return this.children.includes(node); }
   style = {};
 }
 
-async function boot(input = dataset) {
+async function boot(input = dataset, wikiResponse) {
   const elements = new Map();
   let map;
   const requests = [];
@@ -32,17 +33,31 @@ async function boot(input = dataset) {
     constructor() { map = this; this.sources = {}; this.layers = {}; this.filters = []; }
     addControl() {}
     on(name, layer, callback) { mapEvents[callback ? `${name}:${layer}` : name] = callback || layer; }
-    addSource(id, source) { this.sources[id] = source; }
+    addSource(id, source) {
+      source.updates = 0;
+      source.setData = data => { source.data = data; source.updates++; };
+      source.getClusterExpansionZoom = async () => 5;
+      this.sources[id] = source;
+    }
+    getSource(id) { return this.sources[id]; }
+    easeTo(value) { this.lastEase = value; }
     addLayer(layer) { this.layers[layer.id] = layer; }
     getLayer(id) { return this.layers[id]; }
     setFilter(id, filter) { this.layers[id].filter = filter; this.filters.push(filter); }
     getCanvas() { return { style: {} }; }
     flyTo(value) { this.lastFlight = value; }
+    fitBounds(bounds, options) { this.lastBounds = { bounds, options }; }
   }
   const context = vm.createContext({
     document, window: { maplibregl: { Map: MapStub, NavigationControl: class {} } },
-    URL, localStorage: { getItem: () => null }, console,
-    fetch: async (url, options) => { requests.push({ url, options }); return { ok: true, json: async () => input }; },
+    URL, AbortSignal, DOMParser: class {
+      parseFromString(value) { return { body: { textContent: value.replace(/<[^>]*>/g, '') } }; }
+    }, localStorage: { getItem: () => null }, console,
+    fetch: async (url, options) => {
+      requests.push({ url, options });
+      if (url.startsWith('https://en.wikipedia.org/')) return wikiResponse ? wikiResponse(new URL(url)) : { ok: true, json: async () => ({}) };
+      return { ok: true, json: async () => input };
+    },
     clearInterval: () => {}, setInterval: callback => { tick = callback; return 1; }
   });
   vm.runInContext(fs.readFileSync(path.join(root, 'app.js'), 'utf8'), context);
@@ -65,11 +80,11 @@ test('imports unique sites, plots numeric locations, searches and displays sourc
   get('siteRows').children[0].onclick();
   const detail = get('detail');
   assert.equal(detail.hidden, false);
-  assert.ok(detail.children.some(e => e.textContent?.includes('millennium precision')));
+  assert.match(detail.children.find(e => e.className === 'age').textContent, /BCE$/);
   const links = detail.children.find(e => e.className === 'source-links');
   assert.equal(links.children.length, 2);
   assert.ok(links.children[0].href.startsWith('https://en.wikipedia.org/'));
-  assert.ok(detail.children.some(e => e.textContent?.includes('recorded locations')));
+  assert.ok(!detail.children.some(e => e.className === 'meta' || e.className === 'fine'));
 });
 
 test('timeline groups older than 10k and plays through the latest imported year', async () => {
@@ -81,10 +96,10 @@ test('timeline groups older than 10k and plays through the latest imported year'
   const get = id => app.elements.get(id);
   get('time').oninput({ target: { value: '10000' } });
   assert.equal(get('siteRows').children.length, 1);
-  assert.equal(get('timeLabel').textContent, 'Older than 10k years');
+  assert.equal(get('timeLabel').textContent, 'Before 8,050 BCE');
   get('time').oninput({ target: { value: '1950' } });
   assert.equal(get('siteRows').children.length, 3);
-  assert.equal(get('timeLabel').textContent, 'Year 0');
+  assert.equal(get('timeLabel').textContent, '≈ 1 BCE');
   get('alltime').onclick();
   assert.equal(get('siteRows').children.length, 4);
   get('play').onclick();
@@ -145,7 +160,7 @@ test('country filtering combines with description search and supports missing co
   assert.equal(get('siteRows').children.length, 1);
   get('siteRows').children[0].onclick();
   assert.ok(get('detail').children.some(c => c.textContent === 'Painted cave.'));
-  assert.ok(get('detail').children.some(c => c.textContent?.includes('Country: Spain, France')));
+  assert.ok(get('detail').children.some(c => c.textContent === 'Country: Spain, France'));
   get('country').onchange({ target: { value: 'unknown' } });
   assert.equal(get('siteRows').children.length, 1);
   assert.equal(get('siteRows').children[0].children[1].children[0].textContent, 'Third');
@@ -166,16 +181,32 @@ test('active dataset populates the country dropdown and displays imported descri
   assert.ok(get('detail').children.some(c => c.textContent === 'Capital city of Egypt.'));
 });
 
-test('timeline updates layer filters without replacing the source or layer', async () => {
+test('clusters contain only visible sites and expand on click', async () => {
   const app = await boot();
   const source = app.map.sources['atlas-sites'];
   const layer = app.map.layers['atlas-sites'];
+  assert.equal(source.cluster, true);
+  assert.equal(source.clusterRadius, 25);
+  assert.equal(source.clusterMaxZoom, 4);
+  assert.ok(app.map.layers['atlas-cluster-count']);
   app.elements.get('play').onclick();
-  assert.equal(JSON.stringify(layer.filter), JSON.stringify(['all', ['>', ['get', 'ageOlder'], 10000]]));
+  assert.ok(source.data.features.every(f => {
+    const record = dataset.records.find(r => r.id === f.id);
+    return record.inceptionDates.some(d => 1950 - Number(/^([+-]?\d+)-/.exec(d.value)[1]) > 10000);
+  }));
   app.tick();
-  assert.equal(JSON.stringify(layer.filter), JSON.stringify(['all', ['>=', ['get', 'ageOlder'], 9750]]));
   assert.equal(app.map.sources['atlas-sites'], source);
   assert.equal(app.map.layers['atlas-sites'], layer);
+  app.elements.get('country').onchange({ target: { value: 'Q79' } });
+  assert.ok(source.data.features.every(f => dataset.records.find(r => r.id === f.id).countries.some(c => c.id === 'Q79')));
+  await app.mapEvents['click:atlas-clusters']({ features: [{ properties: { cluster_id: 1 }, geometry: { coordinates: [31, 30] } }] });
+  assert.equal(app.map.lastEase.zoom, 5);
+  assert.ok(app.map.lastEase.zoom > source.clusterMaxZoom);
+  const updates = source.updates;
+  app.elements.get('reset').onclick();
+  assert.equal(source.updates, updates);
+  app.elements.get('search').oninput({ target: { value: 'no-such-site-xyz' } });
+  assert.equal(source.data.features.length, 0);
 });
 
 test('50,000 sites use bounded sidebar rows and can scroll to the last site', async () => {
@@ -197,4 +228,62 @@ test('50,000 sites use bounded sidebar rows and can scroll to the last site', as
   app.elements.get('search').oninput({ target: { value: 'Site 49999' } });
   assert.equal(container.children.length, 1);
   assert.equal(container.children[0].atlasSiteId, 'Q50000');
+});
+
+test('country selection fits matching sites, handles the dateline and resets All countries', async () => {
+  const fixture = { records: [[179, -15], [-179, -20]].map((coordinates, i) => ({
+    ...dataset.records[0], id: `Q${i + 1}`, coordinateCandidates: [coordinates],
+    countries: [{ id: 'Q712', title: 'Fiji' }]
+  })) };
+  const app = await boot(fixture);
+  const country = app.elements.get('country');
+  country.onchange({ target: { value: 'Q712' } });
+  assert.equal(JSON.stringify(app.map.lastBounds.bounds), JSON.stringify([[179, -20], [181, -15]]));
+  assert.equal(app.map.lastBounds.options.maxZoom, 6);
+  const previous = app.map.lastBounds;
+  country.onchange({ target: { value: 'Q999' } });
+  assert.equal(app.map.lastBounds, previous);
+  country.onchange({ target: { value: 'all' } });
+  assert.equal(app.map.lastFlight.zoom, 1.8);
+});
+
+test('country search narrows choices and clear filters restores all sites and stops playback', async () => {
+  const app = await boot();
+  const get = id => app.elements.get(id);
+  get('countrySearch').oninput({ target: { value: 'egy' } });
+  const egypt = get('country').children.find(c => c.value === 'Q79');
+  assert.equal(egypt.hidden, false);
+  assert.ok(get('country').children.some(c => c.hidden));
+  get('country').onchange({ target: { value: 'Q79' } });
+  get('search').oninput({ target: { value: 'Cairo' } });
+  get('play').onclick();
+  get('clearFilters').onclick();
+  assert.equal(get('count').textContent, `${dataset.records.length} / ${dataset.records.length}`);
+  assert.equal(get('timeLabel').textContent, 'All imported dates');
+  assert.equal(get('play').attributes['aria-label'], 'Play timeline');
+  assert.equal(get('country').value, 'all');
+  assert.equal(get('countrySearch').value, '');
+  assert.equal(get('search').value, '');
+  assert.ok(get('country').children.every(c => !c.hidden));
+  assert.equal(app.map.lastFlight.zoom, 1.8);
+});
+
+test('cards load a credited thumbnail on demand and cache repeat selections', async () => {
+  const app = await boot(dataset, url => ({ ok: true, json: async () => url.searchParams.get('prop') === 'pageimages'
+    ? { query: { pages: [{ thumbnail: { source: 'https://thumb.wikimedia.org/example.jpg' }, pageimage: 'Example.jpg' }] } }
+    : { query: { pages: [{ imageinfo: [{ descriptionurl: 'https://commons.wikimedia.org/wiki/File:Example.jpg',
+      extmetadata: { Artist: { value: '<b>Example author</b>' }, LicenseShortName: { value: 'CC BY-SA 4.0' } } }] }] } }
+  }));
+  assert.equal(app.requests.length, 1);
+  const button = app.elements.get('siteRows').children[0];
+  button.onclick();
+  await new Promise(resolve => setImmediate(resolve));
+  const figure = app.elements.get('detail').children.find(e => e.className === 'site-image');
+  assert.equal(figure.hidden, false);
+  assert.equal(figure.children[0].src, 'https://thumb.wikimedia.org/example.jpg');
+  assert.equal(figure.children[1].children[0].textContent, 'Example author · CC BY-SA 4.0');
+  assert.equal(app.requests.length, 3);
+  button.onclick();
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(app.requests.length, 3);
 });

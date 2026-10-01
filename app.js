@@ -26,12 +26,12 @@ function formatDescription(value) {
   const sentence = text.replace(/\p{L}/u, letter => letter.toLocaleUpperCase('en-US'));
   return /[.!?…]["'”’\)\]]*$/.test(sentence) ? sentence : `${sentence}.`;
 }
-const age = s => `≈ ${fmt(s.ageOlder)} years BP`;
+const age = s => calendarLabel(s.ageOlder);
 let timelineMin = 1950; // Updated from the latest imported timeline point.
 const timelineMax = 10000; // Oldest position groups all dates older than 10k BP.
-const calendarLabel = bp => bp === 1950 ? 'Year 0'
+const calendarLabel = bp => bp === 1950 ? '≈ 1 BCE'
   : bp > 1950 ? `≈ ${fmt(Math.round(bp - 1950))} BCE` : `≈ ${fmt(Math.round(1950 - bp))} CE`;
-const timelineLabel = () => threshold === timelineMax ? 'Older than 10k years'
+const timelineLabel = () => threshold === timelineMax ? 'Before 8,050 BCE'
   : calendarLabel(threshold);
 
 function importedSites(dataset) {
@@ -94,7 +94,7 @@ function renderSiteRows() {
     const name = document.createElement('b');
     name.textContent = s.title;
     const sub = document.createElement('small');
-    sub.textContent = `${age(s)} · ${s.timelineDate.precisionLabel} precision`;
+    sub.textContent = age(s);
     text.append(name, sub);
     b.append(dot, text);
     b.setAttribute('aria-posinset', filteredSites.indexOf(s) + 1);
@@ -120,14 +120,74 @@ function renderSiteRows() {
   }
 }
 
-function pointFilter() {
-  const filters = ['all'];
-  if (theme !== 'all') filters.push(['==', ['get', 'theme'], theme]);
-  if (country === 'unknown') filters.push(['==', ['length', ['get', 'countries']], 0]);
-  else if (country !== 'all') filters.push(['in', country, ['get', 'countries']]);
-  if (query) filters.push(['in', query, ['get', 'searchText']]);
-  if (!allTime) filters.push([threshold === timelineMax ? '>' : '>=', ['get', 'ageOlder'], threshold]);
-  return filters;
+function pointCollection(sites) {
+  return { type: 'FeatureCollection', features: sites.map(s => ({
+    type: 'Feature', id: s.id, geometry: { type: 'Point', coordinates: s.coordinates },
+    properties: { siteId: s.id }
+  })) };
+}
+
+function syncClusterSource() {
+  const source = map?.getSource('atlas-sites');
+  if (!source) return;
+  const ids = filteredSites.map(s => s.id);
+  if (map._atlasVisibleIds?.length === ids.length && ids.every((id, i) => id === map._atlasVisibleIds[i])) return;
+  source.setData(pointCollection(filteredSites));
+  map._atlasVisibleIds = ids;
+}
+
+const wikiImageCache = new Map();
+let wikiImageQueue = Promise.resolve(), wikiRetryAt = 0;
+async function wikiRequest(parameters) {
+  if (Date.now() < wikiRetryAt) throw new Error('Wikipedia requests paused');
+  const url = new URL('https://en.wikipedia.org/w/api.php');
+  for (const [key, value] of Object.entries({ action: 'query', format: 'json', formatversion: 2,
+    origin: '*', ...parameters })) url.searchParams.set(key, value);
+  const response = await fetch(url.href, { credentials: 'omit', signal: AbortSignal.timeout(10000),
+    headers: { 'Api-User-Agent': 'OriginsAtlas/1.0 (https://github.com/Jneratko/Origins)' } });
+  if (!response.ok) {
+    const retry = response.headers?.get('retry-after');
+    const delay = retry && Number.isFinite(Number(retry)) ? Number(retry) * 1000
+      : retry ? Math.max(0, Date.parse(retry) - Date.now()) : 60000;
+    if (response.status === 429 || response.status === 503) wikiRetryAt = Date.now() + (delay || 60000);
+    throw new Error('Wikipedia image unavailable');
+  }
+  const result = await response.json();
+  if (result.error) throw new Error('Wikipedia API error');
+  return result;
+}
+function wikiImage(article) {
+  const cached = wikiImageCache.get(article);
+  if (cached && cached.expires > Date.now()) return cached.promise;
+  const promise = wikiImageQueue.then(async () => {
+    const url = new URL(article);
+    if (url.hostname !== 'en.wikipedia.org' || !url.pathname.startsWith('/wiki/')) return null;
+    const title = decodeURIComponent(url.pathname.slice(6)).replace(/_/g, ' ');
+    const result = await wikiRequest({ prop: 'pageimages', titles: title, redirects: 1,
+      piprop: 'thumbnail|name', pithumbsize: 640, pilicense: 'free' });
+    const page = result.query?.pages?.[0];
+    if (!page?.thumbnail?.source || !page.pageimage) return null;
+    const imageUrl = new URL(page.thumbnail.source);
+    if (imageUrl.protocol !== 'https:' || !['upload.wikimedia.org', 'thumb.wikimedia.org'].includes(imageUrl.hostname)) return null;
+    const info = await wikiRequest({ prop: 'imageinfo', titles: `File:${page.pageimage}`,
+      iiprop: 'url|extmetadata' });
+    const imageInfo = info.query?.pages?.[0]?.imageinfo?.[0];
+    if (!imageInfo?.descriptionurl) return null;
+    const creditUrl = new URL(imageInfo.descriptionurl);
+    if (creditUrl.protocol !== 'https:' || !['commons.wikimedia.org', 'en.wikipedia.org'].includes(creditUrl.hostname)) return null;
+    const metadata = imageInfo.extmetadata || {};
+    // Metadata may contain markup; render it as plain text only.
+    const plain = value => new DOMParser().parseFromString(value || '', 'text/html').body.textContent.trim();
+    return { source: imageUrl.href, creditUrl: creditUrl.href,
+      credit: [plain(metadata.Artist?.value), plain(metadata.LicenseShortName?.value)].filter(Boolean).join(' · ') };
+  }).catch(() => {
+    const entry = wikiImageCache.get(article);
+    if (entry) entry.expires = Date.now() + 60000;
+    return null;
+  });
+  wikiImageQueue = promise.then(() => {});
+  wikiImageCache.set(article, { promise, expires: Date.now() + 86400000 });
+  return promise;
 }
 
 function refresh() {
@@ -135,7 +195,7 @@ function refresh() {
   filteredSites = list;
   $('count').textContent = `${list.length} / ${data.length}`;
   renderSiteRows();
-  if (map?.getLayer('atlas-sites')) map.setFilter('atlas-sites', pointFilter());
+  syncClusterSource();
   $('timeLabel').textContent = allTime ? 'All imported dates' : timelineLabel();
   $('time').setAttribute('aria-valuetext', timelineLabel());
   if (selected && !list.some(s => s.id === selected)) {
@@ -174,17 +234,31 @@ function selectSite(id, fly = true) {
   date.textContent = age(s);
   const p = document.createElement('p');
   p.textContent = s.description;
-  const meta = document.createElement('div');
-  meta.className = 'meta';
-  meta.textContent = `Country: ${s.region}\n` + s.inceptionDates.map(d =>
-    `Recorded inception: ${d.value.split('T')[0]} · ${d.precisionLabel} precision · ${d.calendarModel.endsWith('/Q1985727') ? 'Gregorian' : d.calendarModel.endsWith('/Q1985786') ? 'Julian' : d.calendarModel}`
-  ).join('\n');
-  const disclaimer = document.createElement('p');
-  disclaimer.className = 'fine';
-  disclaimer.textContent = 'Timeline uses the recorded inception year as an approximate point, in years before 1950 (BP).'
-    + (s.inceptionDates.length > 1 ? ' The oldest recorded inception is used; all values are listed above.' : '')
-    + (s.coordinateCandidates.length > 1 ? ` Showing the first of ${s.coordinateCandidates.length} recorded locations.` : '');
-  a.append(close, tag, h, date, p, meta, disclaimer);
+  const countryLabel = document.createElement('p');
+  countryLabel.className = 'site-country';
+  countryLabel.textContent = `Country: ${s.region}`;
+  a.append(close, tag, h, date, countryLabel, p);
+  const figure = document.createElement('figure');
+  figure.className = 'site-image';
+  figure.hidden = true;
+  a.append(figure);
+  wikiImage(s.wikipediaUrls[0]).then(photo => {
+    if (!photo || selected !== id || !a.contains(figure)) return;
+    const image = document.createElement('img');
+    image.src = photo.source;
+    image.alt = `Wikipedia article image for ${s.title}`;
+    image.decoding = 'async';
+    image.onerror = () => { figure.hidden = true; };
+    const caption = document.createElement('figcaption');
+    const credit = document.createElement('a');
+    credit.href = photo.creditUrl;
+    credit.textContent = photo.credit || 'Image credits and license';
+    credit.target = '_blank';
+    credit.rel = 'noopener noreferrer';
+    caption.append(credit);
+    figure.append(image, caption);
+    figure.hidden = false;
+  });
   const links = document.createElement('div');
   links.className = 'source-links';
   for (const [label, url] of [['Wikipedia', s.wikipediaUrls[0]], ['Wikidata', s.wikidataUrl]]) {
@@ -217,7 +291,7 @@ function selectSite(id, fly = true) {
   }
   if (map && fly) map.flyTo({
     center: s.coordinates,
-    zoom: 4,
+    zoom: 6,
     speed: .8
   });
 }
@@ -250,6 +324,7 @@ function createMap(token) {
       container: 'map',
       style: token ? 'mapbox://styles/mapbox/light-v11' : {
         version: 8,
+        glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
         sources: {
           base: {
             type: 'raster',
@@ -279,16 +354,31 @@ function createMap(token) {
     const currentMap = map;
     map.on('load', () => {
       if (map !== currentMap) return;
-      map.addSource('atlas-sites', { type: 'geojson', data: {
-        type: 'FeatureCollection', features: data.map(s => ({
-          type: 'Feature', id: s.id, geometry: { type: 'Point', coordinates: s.coordinates },
-          properties: { siteId: s.id, ageOlder: s.ageOlder, theme: s.theme,
-            countries: s.countries.map(c => c.id), searchText: s.searchText }
-        }))
-      }});
+      map.addSource('atlas-sites', { type: 'geojson', cluster: true,
+        clusterRadius: 25, clusterMaxZoom: 4, data: pointCollection(filteredSites) });
+      map._atlasVisibleIds = filteredSites.map(s => s.id);
+      map.addLayer({ id: 'atlas-clusters', type: 'circle', source: 'atlas-sites',
+        filter: ['has', 'point_count'], paint: {
+          'circle-color': colors.Archaeology,
+          'circle-radius': ['step', ['get', 'point_count'], 14, 100, 18, 1000, 22],
+          'circle-stroke-width': 2, 'circle-stroke-color': '#152330' } });
+      map.addLayer({ id: 'atlas-cluster-count', type: 'symbol', source: 'atlas-sites',
+        filter: ['has', 'point_count'], layout: {
+          'text-field': ['to-string', ['get', 'point_count_abbreviated']],
+          'text-size': 12, 'text-font': [token ? 'Open Sans Regular' : 'Noto Sans Regular'], 'text-allow-overlap': true
+        }, paint: { 'text-color': '#152330' } });
       map.addLayer({ id: 'atlas-sites', type: 'circle', source: 'atlas-sites',
         paint: { 'circle-radius': 6, 'circle-color': colors.Archaeology,
-          'circle-stroke-width': 2, 'circle-stroke-color': '#152330' }, filter: pointFilter() });
+          'circle-stroke-width': 2, 'circle-stroke-color': '#152330' },
+        filter: ['!', ['has', 'point_count']] });
+      map.on('click', 'atlas-clusters', e => {
+        const feature = e.features?.[0];
+        if (!feature) return;
+        // Above clusterMaxZoom every feature is an individual point.
+        currentMap.easeTo({ center: feature.geometry.coordinates, zoom: 5, duration: 600 });
+      });
+      map.on('mouseenter', 'atlas-clusters', () => { map.getCanvas().style.cursor = 'pointer'; });
+      map.on('mouseleave', 'atlas-clusters', () => { map.getCanvas().style.cursor = ''; });
       map.on('click', 'atlas-sites', e => {
         const id = e.features?.[0]?.properties?.siteId;
         if (sitesById.has(id)) selectSite(id);
@@ -312,6 +402,33 @@ function createMap(token) {
   }
 }
 $('sites').onscroll = () => renderSiteRows();
+$('countrySearch').oninput = e => {
+  const text = e.target.value.trim().toLowerCase();
+  for (const option of $('country').children) {
+    option.hidden = option.value !== 'all' && option.value !== country &&
+      !option.textContent.toLowerCase().includes(text);
+  }
+};
+$('clearFilters').onclick = () => {
+  stop();
+  query = '';
+  country = 'all';
+  theme = 'all';
+  allTime = true;
+  threshold = timelineMin;
+  journeyIndex = -1;
+  selected = null;
+  $('detail').hidden = true;
+  $('search').value = '';
+  $('countrySearch').value = '';
+  $('country').value = 'all';
+  for (const option of $('country').children) option.hidden = false;
+  $('time').value = timelineMin;
+  $('sites').scrollTop = 0;
+  document.querySelectorAll('[data-theme]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.theme === 'all')));
+  refresh();
+  if (map) map.flyTo({ center: [28, 16], zoom: 1.8 });
+};
 $('search').oninput = e => {
   query = e.target.value.toLowerCase().trim();
   $('sites').scrollTop = 0;
@@ -323,6 +440,33 @@ $('country').onchange = e => {
   $('sites').scrollTop = 0;
   journeyIndex = -1;
   refresh();
+  if (!map) return;
+  if (country === 'all') {
+    map.flyTo({ center: [28, 16], zoom: 1.8 });
+    return;
+  }
+  if (!filteredSites.length) return;
+  // Use the shortest longitude interval, including countries across the dateline.
+  const longitudes = filteredSites.map(s => (s.coordinates[0] + 360) % 360).sort((a, b) => a - b);
+  let largestGap = -1, start = 0;
+  for (let i = 0; i < longitudes.length; i++) {
+    const next = i + 1 < longitudes.length ? longitudes[i + 1] : longitudes[0] + 360;
+    if (next - longitudes[i] > largestGap) {
+      largestGap = next - longitudes[i];
+      start = next % 360;
+    }
+  }
+  const west = start > 180 ? start - 360 : start;
+  let south = 90, north = -90;
+  for (const s of filteredSites) {
+    south = Math.min(south, s.coordinates[1]);
+    north = Math.max(north, s.coordinates[1]);
+  }
+  map.fitBounds([[west, south], [west + 360 - largestGap, north]], {
+    padding: { top: 80, bottom: 260, left: 40, right: 40 },
+    maxZoom: 6,
+    duration: 900
+  });
 };
 document.querySelectorAll('[data-theme]').forEach(b => b.onclick = () => {
   theme = b.dataset.theme;
@@ -432,7 +576,7 @@ async function init() {
     }
     // Round down to a slider step so every site's timeline point is reachable.
     timelineMin = Math.min(1950, Math.floor(data.reduce((min, s) => Math.min(min, s.ageOlder), Infinity) / 50) * 50);
-    $('timedesc').textContent = `Show sites cumulatively through ${calendarLabel(timelineMin)}. The oldest position groups dates older than 10k years (before 1950).`;
+    $('timedesc').textContent = `Show sites cumulatively through ${calendarLabel(timelineMin)}. The oldest position groups sites dated before 8,050 BCE.`;
     $('tickMiddleOlder').textContent = calendarLabel(timelineMax - (timelineMax - timelineMin) / 3);
     $('tickMiddleYounger').textContent = calendarLabel(timelineMax - 2 * (timelineMax - timelineMin) / 3);
     $('tickLatest').textContent = calendarLabel(timelineMin);

@@ -51,8 +51,11 @@
           type="search"
         >
 
+        <label class="searchlabel" for="countrySearch">Find a country</label>
+        <input id="countrySearch" type="search" placeholder="Search countries…" aria-controls="country">
         <label class="searchlabel" for="country">Country</label>
         <select id="country"><option value="all">All countries</option></select>
+        <button id="clearFilters" type="button">Clear filters</button>
 
         <div class="filters" aria-label="Filter by theme" hidden>
           <button data-theme="all" aria-pressed="true">All sites</button>
@@ -99,7 +102,7 @@
             <button id="alltime">All time</button>
           </div>
 
-          <label for="time" id="timedesc">Show sites cumulatively through Year 0. The oldest position groups dates older than 10k years (before 1950).</label>
+          <label for="time" id="timedesc">Show sites cumulatively through the selected calendar year. The oldest position groups sites dated before 8,050 BCE.</label>
           <input
             id="time"
             type="range"
@@ -111,10 +114,10 @@
           >
 
           <div class="ticks">
-            <span>Older than 10k years</span>
+            <span>Before 8,050 BCE</span>
             <span id="tickMiddleOlder">≈ 5,400 BCE</span>
             <span id="tickMiddleYounger">≈ 2,700 BCE</span>
-            <span id="tickLatest">Year 0</span>
+            <span id="tickLatest">≈ 1 BCE</span>
           </div>
 
           <div class="timefoot">
