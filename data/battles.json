@@ -1,0 +1,181 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "type": "wikidata-entity-api",
+    "property": "P585/P580",
+    "category": "Battles",
+    "inputRows": 6,
+    "endpoint": "https://www.wikidata.org/w/api.php",
+    "fetchedAt": "2026-10-01T23:48:11.014Z",
+    "starterSet": true,
+    "requestedIds": [
+      "Q48314",
+      "Q83224",
+      "Q33132",
+      "Q4087376"
+    ]
+  },
+  "notes": [
+    "Coordinates use [longitude, latitude].",
+    "Event dates use point in time (P585), falling back to start time (P580).",
+    "Raw dates retain their calendar and precision; no timeline ages are inferred.",
+    "This export may be limited and is not an exhaustive archaeological inventory."
+  ],
+  "rejectedRows": [],
+  "records": [
+    {
+      "id": "Q33132",
+      "title": "Battle of Gettysburg",
+      "category": "Battles",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q33132",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Battle_of_Gettysburg"
+      ],
+      "coordinateCandidates": [
+        [
+          -77.22583333333333,
+          39.81138888888889
+        ]
+      ],
+      "description": "1863 battle of the American Civil War",
+      "countries": [
+        {
+          "id": "Q30",
+          "title": "United States",
+          "wikidataUrl": "http://www.wikidata.org/entity/Q30"
+        }
+      ],
+      "eventDates": [
+        {
+          "value": "+1863-07-01T00:00:00Z",
+          "precision": 11,
+          "precisionLabel": "day",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985727",
+          "property": "P580"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified"
+      ]
+    },
+    {
+      "id": "Q48314",
+      "title": "Battle of Waterloo",
+      "category": "Battles",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q48314",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Battle_of_Waterloo"
+      ],
+      "coordinateCandidates": [
+        [
+          4.412222222222222,
+          50.67805555555555
+        ]
+      ],
+      "description": "1815 battle during the War of the Seventh Coalition",
+      "countries": [
+        {
+          "id": "Q15864",
+          "title": "United Kingdom of the Netherlands",
+          "wikidataUrl": "http://www.wikidata.org/entity/Q15864"
+        },
+        {
+          "id": "Q31",
+          "title": "Belgium",
+          "wikidataUrl": "http://www.wikidata.org/entity/Q31"
+        }
+      ],
+      "eventDates": [
+        {
+          "value": "+1815-06-18T00:00:00Z",
+          "precision": 11,
+          "precisionLabel": "day",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985727",
+          "property": "P585"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified"
+      ]
+    },
+    {
+      "id": "Q83224",
+      "title": "Battle of Hastings",
+      "category": "Battles",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q83224",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Battle_of_Hastings"
+      ],
+      "coordinateCandidates": [
+        [
+          0.4875,
+          50.911944444444444
+        ]
+      ],
+      "description": "battle which occurred on 14 October 1066",
+      "countries": [
+        {
+          "id": "Q179876",
+          "title": "Kingdom of England",
+          "wikidataUrl": "http://www.wikidata.org/entity/Q179876"
+        },
+        {
+          "id": "Q145",
+          "title": "United Kingdom",
+          "wikidataUrl": "http://www.wikidata.org/entity/Q145"
+        }
+      ],
+      "eventDates": [
+        {
+          "value": "+1066-10-14T00:00:00Z",
+          "precision": 11,
+          "precisionLabel": "day",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985786",
+          "property": "P585"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified"
+      ]
+    },
+    {
+      "id": "Q4087376",
+      "title": "Battle of Zadwórze",
+      "category": "Battles",
+      "wikidataUrl": "http://www.wikidata.org/entity/Q4087376",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Battle_of_Zadw%C3%B3rze"
+      ],
+      "coordinateCandidates": [
+        [
+          24.435555555555556,
+          49.888888888888886
+        ]
+      ],
+      "description": "battle of the Polish-Soviet war (1920)",
+      "countries": [
+        {
+          "id": "Q212",
+          "title": "Ukraine",
+          "wikidataUrl": "http://www.wikidata.org/entity/Q212"
+        }
+      ],
+      "eventDates": [
+        {
+          "value": "+1920-08-17T00:00:00Z",
+          "precision": 11,
+          "precisionLabel": "day",
+          "calendarModel": "http://www.wikidata.org/entity/Q1985727",
+          "property": "P585"
+        }
+      ],
+      "reviewStatus": "unreviewed",
+      "reviewFlags": [
+        "date-meaning-unverified"
+      ]
+    }
+  ]
+}

@@ -90,7 +90,7 @@ Select **Use demo map** to remove the saved token and return to the demo basemap
 
 Run the importer below and refresh the browser to load the new `data/candidates.json`. The app requests this file without browser caching. Publishing the update requires committing and pushing the generated file along with the app changes.
 
-The app uses the first coordinate candidate for each site. If multiple inception dates exist, the oldest recorded year drives the cumulative timeline; all dates remain visible in the detail card. Approximate timeline ages are calculated as `1950 - signed inception year`, without day-level calendar conversion. Displayed dates use approximate BCE/CE years; raw values, precision, and calendar models remain in the dataset. The slider runs from “Before 8,050 BCE” (the oldest-date bucket) through the latest imported timeline point, currently approximately 1500 CE. The endpoint is rounded to a 50-year slider step so every site is reachable. Playback starts with the oldest bucket and adds sites cumulatively through that endpoint. All time removes the timeline restriction.
+The app uses the first coordinate candidate for each site. If multiple inception dates exist, the oldest recorded year drives the cumulative timeline; all dates remain visible in the detail card. Approximate timeline ages are calculated as `1950 - signed inception year`, without day-level calendar conversion. Displayed dates use approximate BCE/CE years; raw values, precision, and calendar models remain in the dataset. The slider runs from “Before 8050 BCE” (the oldest-date bucket) through the latest imported timeline point, currently approximately 1500 CE. The endpoint is rounded to a 50-year slider step so every site is reachable. Playback starts with the oldest bucket and adds sites cumulatively through that endpoint. All time removes the timeline restriction.
 
 All imported sites use an Archaeology category. The synthetic theme filters and six-stop journey are hidden because the imported data does not provide those classifications or a curated sequence. `sites.json` is retained as a sample, but is no longer loaded.
 
@@ -149,3 +149,27 @@ Run `node --test tests/*.test.cjs` for importer and app checks covering optional
 Sites render as a WebGL circle layer with one GeoJSON source. Nearby sites cluster at low zoom with counts; clicking a cluster zooms in. Timeline, country, and search filters update the existing clustered source with matching sites so counts reflect those filters. The source updates only when the set of visible sites changes. The sidebar renders only a viewport of fixed-height rows; use scrolling or Arrow Up/Down, Home, and End to navigate. Source loading and full detail data still use the existing JSON import. Detail-file splitting and batched Wikidata imports remain future work.
 
 The tests include a 50,000-site synthetic dataset to check bounded sidebar rendering, scrolling, and selection. This simulated test is not a browser performance benchmark.
+
+## Battles
+
+The atlas also loads `data/battles.json`. The Archaeology and Battles navigation buttons open separate views. Each view has its own country choices, timeline range, heading, legend, counts, and map points. Switching views resets filters and returns to world view; Clear filters stays in the current view. View presentation settings live in the `views` registry in `app.js`. Battles use coral points and show event years, country names, descriptions, Wikipedia images, and source links. Missing battle data leaves archaeology available with a visible status message.
+
+The included starter set contains Waterloo, Hastings, Gettysburg, and Zadwórze, fetched from the Wikidata entity API. Country values are recorded Wikidata countries, including historical states; they do not identify the combatants. Event dates use point in time (P585), falling back to start time (P580). These remain unreviewed records.
+
+For a larger import, run:
+
+```sh
+node scripts/import-wikidata.mjs --battles --fetch
+```
+
+This uses `scripts/battles.sparql`, including battle subclasses, coordinates, English articles, and dates through the current year. Its 1,000-row cap and request timeout also apply. To import a downloaded query export:
+
+```sh
+node scripts/import-wikidata.mjs --battles downloaded-battles.json
+```
+
+To regenerate only the four-event starter set, run `node scripts/import-battle-starter.mjs`. This replaces the battle dataset; it does not modify archaeology. Refresh the atlas after an import.
+
+## Geology sample view
+
+The green Geology view loads five real sample locations from `data/geology.json`: Grand Canyon, Giant’s Causeway, Mount Etna, Uluru, and Grand Canyon of the Yellowstone. Countries, descriptions, source links, and on-demand Wikipedia images work as in the other views. Approximate coordinates and location descriptions come from the linked Wikidata records. These are curated samples, not a comprehensive import. No formation ages are assigned, and the historical timeline is hidden in this view.

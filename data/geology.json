@@ -1,0 +1,154 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "type": "curated-wikidata-sample",
+    "category": "Geology",
+    "sample": true
+  },
+  "notes": [
+    "Five real geological locations with approximate coordinates sourced from their Wikidata records. Formation ages are not assigned; these samples do not use the historical timeline."
+  ],
+  "rejectedRows": [],
+  "records": [
+    {
+      "id": "Q118841",
+      "title": "Grand Canyon",
+      "category": "Geology",
+      "coordinateCandidates": [
+        [
+          -112.095278,
+          36.0975
+        ]
+      ],
+      "countries": [
+        {
+          "id": "Q30",
+          "title": "United States",
+          "wikidataUrl": "https://www.wikidata.org/wiki/Q30"
+        }
+      ],
+      "featureType": "Canyon",
+      "description": "Steep-sided canyon carved by the Colorado River in Arizona, United States",
+      "wikidataUrl": "https://www.wikidata.org/wiki/Q118841",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Grand_Canyon"
+      ],
+      "reviewStatus": "sample",
+      "reviewFlags": [
+        "formation-age-not-assigned"
+      ]
+    },
+    {
+      "id": "Q106187",
+      "title": "Giant’s Causeway",
+      "category": "Geology",
+      "coordinateCandidates": [
+        [
+          -6.511667,
+          55.240833
+        ]
+      ],
+      "countries": [
+        {
+          "id": "Q145",
+          "title": "United Kingdom",
+          "wikidataUrl": "https://www.wikidata.org/wiki/Q145"
+        }
+      ],
+      "featureType": "Basalt formation",
+      "description": "Rock formation on the Antrim coast of Northern Ireland",
+      "wikidataUrl": "https://www.wikidata.org/wiki/Q106187",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Giant%27s_Causeway"
+      ],
+      "reviewStatus": "sample",
+      "reviewFlags": [
+        "formation-age-not-assigned"
+      ]
+    },
+    {
+      "id": "Q16990",
+      "title": "Mount Etna",
+      "category": "Geology",
+      "coordinateCandidates": [
+        [
+          14.99322,
+          37.750835
+        ]
+      ],
+      "countries": [
+        {
+          "id": "Q38",
+          "title": "Italy",
+          "wikidataUrl": "https://www.wikidata.org/wiki/Q38"
+        }
+      ],
+      "featureType": "Volcano",
+      "description": "Volcano on the island of Sicily, Italy",
+      "wikidataUrl": "https://www.wikidata.org/wiki/Q16990",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Mount_Etna"
+      ],
+      "reviewStatus": "sample",
+      "reviewFlags": [
+        "formation-age-not-assigned"
+      ]
+    },
+    {
+      "id": "Q33910",
+      "title": "Uluru",
+      "category": "Geology",
+      "coordinateCandidates": [
+        [
+          131.036111,
+          -25.345
+        ]
+      ],
+      "countries": [
+        {
+          "id": "Q408",
+          "title": "Australia",
+          "wikidataUrl": "https://www.wikidata.org/wiki/Q408"
+        }
+      ],
+      "featureType": "Sandstone formation",
+      "description": "Sandstone rock formation in the Northern Territory, Australia",
+      "wikidataUrl": "https://www.wikidata.org/wiki/Q33910",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Uluru"
+      ],
+      "reviewStatus": "sample",
+      "reviewFlags": [
+        "formation-age-not-assigned"
+      ]
+    },
+    {
+      "id": "Q1542533",
+      "title": "Grand Canyon of the Yellowstone",
+      "category": "Geology",
+      "coordinateCandidates": [
+        [
+          -110.496667,
+          44.716667
+        ]
+      ],
+      "countries": [
+        {
+          "id": "Q30",
+          "title": "United States",
+          "wikidataUrl": "https://www.wikidata.org/wiki/Q30"
+        }
+      ],
+      "featureType": "Canyon",
+      "description": "Canyon on the Yellowstone River in Park County, Wyoming, United States",
+      "wikidataUrl": "https://www.wikidata.org/wiki/Q1542533",
+      "wikipediaUrls": [
+        "https://en.wikipedia.org/wiki/Grand_Canyon_of_the_Yellowstone"
+      ],
+      "reviewStatus": "sample",
+      "reviewFlags": [
+        "formation-age-not-assigned"
+      ]
+    }
+  ]
+}

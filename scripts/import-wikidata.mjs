@@ -2,17 +2,21 @@ import { readFile, writeFile, mkdir } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 
 // Accept a Query Service download, or fetch the saved query directly.
-const [input, output = 'data/candidates.json'] = process.argv.slice(2);
-if (!input) throw new Error('Usage: node scripts/import-wikidata.mjs <input.json|--fetch> [output.json]');
+const args = process.argv.slice(2);
+const battles = args.includes('--battles');
+const [input, output = battles ? 'data/battles.json' : 'data/candidates.json'] = args.filter(arg => arg !== '--battles');
+const category = battles ? 'Battles' : 'Archaeology';
+const dateField = battles ? 'eventDates' : 'inceptionDates';
+if (!input) throw new Error('Usage: node scripts/import-wikidata.mjs [--battles] <input.json|--fetch> [output.json]');
 let raw;
-let source = { type: 'wikidata-query-export', property: 'P571' };
+let source = { type: 'wikidata-query-export', property: battles ? 'P585/P580' : 'P571', category };
 if (input === '--fetch') {
-  const query = await readFile(new URL('./archaeological-sites.sparql', import.meta.url), 'utf8');
+  const query = await readFile(new URL(battles ? './battles.sparql' : './archaeological-sites.sparql', import.meta.url), 'utf8');
   const endpoint = 'https://query.wikidata.org/sparql';
   const url = new URL(endpoint);
   url.searchParams.set('query', query);
   url.searchParams.set('format', 'json');
-  console.log('Fetching archaeological candidates from Wikidata…');
+  console.log(`Fetching ${category.toLowerCase()} candidates from Wikidata…`);
   let response;
   try {
     response = await fetch(url, {
@@ -30,7 +34,7 @@ if (input === '--fetch') {
   } catch (error) {
     throw new Error(`Wikidata fetch failed (${error.message}${error.cause?.code ? `: ${error.cause.code}` : ''}). Existing output was not changed. Retry later or import a downloaded JSON file.`, { cause: error });
   }
-  source = { type: 'wikidata-query-service', property: 'P571', endpoint,
+  source = { type: 'wikidata-query-service', property: battles ? 'P585/P580' : 'P571', category, endpoint,
     fetchedAt: new Date().toISOString(), query, rowLimit: 1000 };
 } else {
   raw = JSON.parse((await readFile(resolve(input), 'utf8')).replace(/^\uFEFF/, ''));
@@ -50,6 +54,8 @@ for (const [index, row] of rows.entries()) {
     const point = /^Point\(\s*([-+\d.eE]+)\s+([-+\d.eE]+)\s*\)$/.exec(value(row.coordinates));
     const coordinates = point?.slice(1).map(Number);
     const date = value(row.inceptionDate);
+    const dateProperty = battles ? value(row.dateProperty) : 'P571';
+    if (battles && !['P585', 'P580'].includes(dateProperty)) throw new Error('Invalid battle date property.');
     const precision = Number(value(row.datePrecision));
     const calendarModel = value(row.calendarModel);
     const article = value(row.article);
@@ -65,9 +71,9 @@ for (const [index, row] of rows.entries()) {
     if (!/^https:\/\/en\.wikipedia\.org\/wiki\/.+/.test(article)) throw new Error('Missing English Wikipedia article.');
     if (countryUrl !== undefined && !countryId) throw new Error('Invalid country entity.');
     if (!sites.has(id)) sites.set(id, {
-      id, title, wikidataUrl: siteUrl, wikipediaUrls: [], coordinateCandidates: [],
+      id, title, category, wikidataUrl: siteUrl, wikipediaUrls: [], coordinateCandidates: [],
       description: '', countries: [],
-      inceptionDates: [], reviewStatus: 'unreviewed', reviewFlags: ['date-meaning-unverified']
+      [dateField]: [], reviewStatus: 'unreviewed', reviewFlags: ['date-meaning-unverified']
     });
     const site = sites.get(id);
     if (typeof description === 'string' && description.trim()) site.description = description.trim();
@@ -76,8 +82,8 @@ for (const [index, row] of rows.entries()) {
     }
     if (!site.wikipediaUrls.includes(article)) site.wikipediaUrls.push(article);
     if (!site.coordinateCandidates.some(p => p[0] === coordinates[0] && p[1] === coordinates[1])) site.coordinateCandidates.push(coordinates);
-    const dateRecord = { value: date, precision, precisionLabel: precisionNames[precision], calendarModel, property: 'P571' };
-    if (!site.inceptionDates.some(d => JSON.stringify(d) === JSON.stringify(dateRecord))) site.inceptionDates.push(dateRecord);
+    const dateRecord = { value: date, precision, precisionLabel: precisionNames[precision], calendarModel, property: dateProperty };
+    if (!site[dateField].some(d => JSON.stringify(d) === JSON.stringify(dateRecord))) site[dateField].push(dateRecord);
   } catch (error) {
     rejectedRows.push({ row: index + 1, reason: error.message });
   }
@@ -86,14 +92,14 @@ for (const [index, row] of rows.entries()) {
 const records = [...sites.values()].sort((a, b) => Number(a.id.slice(1)) - Number(b.id.slice(1)));
 for (const site of records) {
   if (site.coordinateCandidates.length > 1) site.reviewFlags.push('multiple-coordinates');
-  if (site.inceptionDates.length > 1) site.reviewFlags.push('multiple-inception-dates');
-  if (site.inceptionDates.some(d => d.precision < 9)) site.reviewFlags.push('coarse-date-precision');
+  if (site[dateField].length > 1) site.reviewFlags.push(battles ? 'multiple-event-dates' : 'multiple-inception-dates');
+  if (site[dateField].some(d => d.precision < 9)) site.reviewFlags.push('coarse-date-precision');
 }
 const dataset = {
   schemaVersion: 1,
   source: { ...source, inputRows: rows.length,
     ...(input === '--fetch' ? { possiblyTruncated: rows.length >= source.rowLimit } : {}) },
-  notes: ['Coordinates use [longitude, latitude].', 'Inception values are not verified construction or occupation dates.', 'Raw dates retain their calendar and precision; no timeline ages are inferred.', 'This export may be limited and is not an exhaustive archaeological inventory.'],
+  notes: ['Coordinates use [longitude, latitude].', battles ? 'Event dates use point in time (P585), falling back to start time (P580).' : 'Inception values are not verified construction or occupation dates.', 'Raw dates retain their calendar and precision; no timeline ages are inferred.', 'This export may be limited and is not an exhaustive archaeological inventory.'],
   rejectedRows, records
 };
 if (!records.length) throw new Error('No valid records; output was not written.');

@@ -23,25 +23,30 @@
     <link rel="stylesheet" href="style.css">
   </head>
 
-  <body>
+  <body id="atlasApp" data-view="Archaeology">
     <header>
       <a class="brand" href="./">
         <span class="brandmark">◎</span>
         <div>ORIGINS<small>WORLD HISTORY ATLAS</small></div>
       </a>
-      <span class="era">CHAPTER 01 <span>Prehistoric archaeology</span></span>
+      <span class="era">EXPLORE HISTORY <span>Places and events</span></span>
       <button id="settings">Map settings</button>
     </header>
 
     <main>
       <aside>
+        <nav class="filters view-switch" aria-label="Atlas views">
+          <button data-theme="Archaeology" aria-pressed="true">Archaeology</button>
+          <button data-theme="Battles" aria-pressed="false">Battles</button>
+          <button data-theme="Geology" aria-pressed="false">Geology</button>
+        </nav>
         <div class="eyebrow">THE HUMAN STORY</div>
-        <h1>Before the<br>world had names.</h1>
-        <p class="intro">Explore our beginnings, one place and one moment at a time.</p>
+        <h1 id="viewTitle">Explore archaeology.</h1>
+        <p class="intro" id="viewIntro">Explore our beginnings, one place and one moment at a time.</p>
 
         <div class="notice">
-          <b>Archaeological sites</b>
-          <span>Imported from Wikidata, with Wikipedia articles. Timeline points use recorded inception dates.</span>
+          <b id="viewNotice">Archaeological sites</b>
+          <span>Imported from Wikidata, with Wikipedia articles. Explore places and events through time.</span>
         </div>
 
         <label class="searchlabel" for="search">Find a site</label>
@@ -57,15 +62,10 @@
         <select id="country"><option value="all">All countries</option></select>
         <button id="clearFilters" type="button">Clear filters</button>
 
-        <div class="filters" aria-label="Filter by theme" hidden>
-          <button data-theme="all" aria-pressed="true">All sites</button>
-          <button data-theme="Origins" aria-pressed="false">Origins</button>
-          <button data-theme="Migration" aria-pressed="false">Migration</button>
-          <button data-theme="Culture" aria-pressed="false">Culture</button>
-        </div>
+        <p id="categoryStatus" class="fine" role="status"></p>
 
         <div class="listhead">
-          <span>EXPLORE SITES</span>
+          <span id="listTitle">EXPLORE SITES</span>
           <span id="count"></span>
         </div>
         <div id="sites"><div id="siteRows"></div></div>
@@ -89,7 +89,7 @@
         <article id="detail" hidden></article>
 
         <div class="legend">
-          <span><i class="Origins"></i>Archaeological site</span>
+          <span><i id="legendDot" class="Archaeology"></i><span id="legendLabel">Archaeological site</span></span>
         </div>
 
         <div class="timeline" id="timeline">
@@ -100,11 +100,11 @@
             </div>
             <button id="play" aria-label="Play timeline">▶ Play</button>
             <button id="alltime">All time</button>
-            <button id="toggleTimeline" type="button" aria-expanded="true" aria-controls="timelineControls" aria-label="Collapse timeline">Collapse</button>
+            <button id="toggleTimeline" type="button" aria-expanded="true" aria-controls="timelineControls" aria-label="Collapse timeline" title="Collapse timeline"><svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true"><path d="m6 9 6 6 6-6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
           </div>
 
           <div id="timelineControls">
-          <label for="time" id="timedesc">Show sites cumulatively through the selected calendar year. The oldest position groups sites dated before 8,050 BCE.</label>
+          <label for="time" id="timedesc">Show sites cumulatively through the selected calendar year. The oldest position groups sites dated before 8050 BCE.</label>
           <input
             id="time"
             type="range"
@@ -116,15 +116,15 @@
           >
 
           <div class="ticks">
-            <span>Before 8,050 BCE</span>
-            <span id="tickMiddleOlder">≈ 5,400 BCE</span>
-            <span id="tickMiddleYounger">≈ 2,700 BCE</span>
+            <span id="tickOldest">Before 8050 BCE</span>
+            <span id="tickMiddleOlder">≈ 5400 BCE</span>
+            <span id="tickMiddleYounger">≈ 2700 BCE</span>
             <span id="tickLatest">≈ 1 BCE</span>
           </div>
 
           <div class="timefoot">
             <span>Modern geography · approximate locations</span>
-            <span>Prehistoric archaeology</span>
+            <span id="viewFoot">Archaeology</span>
           </div>
           </div>
         </div>

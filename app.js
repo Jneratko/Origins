@@ -5,7 +5,7 @@ let data = [],
   map,
   filteredSites = [],
   sitesById = new Map(),
-  theme = 'all',
+  theme = 'Archaeology',
   query = '',
   threshold = 1950,
   country = 'all',
@@ -17,7 +17,9 @@ const colors = {
   Origins: '#e7bc7a',
   Migration: '#76bfcc',
   Culture: '#c49bc9',
-  Archaeology: '#e7bc7a'
+  Archaeology: '#e7bc7a',
+  Battles: '#e68c82',
+  Geology: '#80c995'
 };
 const fmt = n => n.toLocaleString('en-US');
 function formatDescription(value) {
@@ -26,29 +28,29 @@ function formatDescription(value) {
   const sentence = text.replace(/\p{L}/u, letter => letter.toLocaleUpperCase('en-US'));
   return /[.!?…]["'”’\)\]]*$/.test(sentence) ? sentence : `${sentence}.`;
 }
-const age = s => calendarLabel(s.ageOlder);
+const age = s => s.theme === 'Geology' ? s.featureType || 'Geological site' : calendarLabel(s.ageOlder);
 let timelineMin = 1950; // Updated from the latest imported timeline point.
-const timelineMax = 10000; // Oldest position groups all dates older than 10k BP.
+let timelineMax = 10000; // Oldest position groups all dates older than 10k BP.
 const calendarLabel = bp => bp === 1950 ? '≈ 1 BCE'
-  : bp > 1950 ? `≈ ${fmt(Math.round(bp - 1950))} BCE` : `≈ ${fmt(Math.round(1950 - bp))} CE`;
-const timelineLabel = () => threshold === timelineMax ? 'Before 8,050 BCE'
+  : bp > 1950 ? `≈ ${Math.round(bp - 1950)} BCE` : `≈ ${Math.round(1950 - bp)} CE`;
+const timelineLabel = () => theme === 'Archaeology' && threshold === timelineMax ? 'Before 8050 BCE'
   : calendarLabel(threshold);
 
 function importedSites(dataset) {
   if (!Array.isArray(dataset.records) || !dataset.records.length) throw new Error('No imported sites');
   return dataset.records.map(record => {
     const coordinates = record.coordinateCandidates?.[0];
-    const dates = record.inceptionDates;
+    const dates = record.eventDates || record.inceptionDates || [];
     if (!coordinates || coordinates.length !== 2 || !coordinates.every(Number.isFinite) ||
-        Math.abs(coordinates[0]) > 180 || Math.abs(coordinates[1]) > 90 || !dates?.length) throw new Error('Invalid imported site');
+        Math.abs(coordinates[0]) > 180 || Math.abs(coordinates[1]) > 90 || (!dates.length && record.category !== 'Geology')) throw new Error('Invalid imported site');
     // Use the oldest recorded inception as a single timeline point, not an occupation range.
     const years = dates.map(d => Number(/^([+-]?\d+)-/.exec(d.value)?.[1]));
     if (!years.every(Number.isFinite)) throw new Error('Invalid imported date');
-    const oldestYear = Math.min(...years);
-    const ageOlder = 1950 - oldestYear;
+    const oldestYear = years.length ? Math.min(...years) : null;
+    const ageOlder = oldestYear === null ? null : 1950 - oldestYear;
     const timelineDate = dates[years.indexOf(oldestYear)];
     const countries = record.countries || [];
-    return { ...record, coordinates, ageOlder, timelineDate, theme: 'Archaeology',
+    return { ...record, coordinates, ageOlder, timelineDate, theme: record.category || 'Archaeology',
       countries, region: countries.map(c => c.title).join(', ') || 'Country not recorded',
       description: formatDescription(record.description),
       isTestData: false };
@@ -59,7 +61,7 @@ function visible() {
   return data.filter(s => (theme === 'all' || s.theme === theme) &&
     (country === 'all' || (country === 'unknown' ? !s.countries.length : s.countries.some(c => c.id === country))) &&
     (!query || s.searchText.includes(query)) &&
-    (allTime || (threshold === timelineMax ? s.ageOlder > timelineMax : s.ageOlder >= threshold)));
+    (allTime || (theme === 'Archaeology' && threshold === timelineMax ? s.ageOlder > timelineMax : s.ageOlder >= threshold)));
 }
 
 function stop() {
@@ -123,7 +125,7 @@ function renderSiteRows() {
 function pointCollection(sites) {
   return { type: 'FeatureCollection', features: sites.map(s => ({
     type: 'Feature', id: s.id, geometry: { type: 'Point', coordinates: s.coordinates },
-    properties: { siteId: s.id }
+    properties: { siteId: s.id, category: s.theme }
   })) };
 }
 
@@ -190,12 +192,86 @@ function wikiImage(article) {
   return promise;
 }
 
+const views = {
+  Archaeology: { title: 'Explore archaeology.', intro: 'Discover ancient places and the traces people left behind.',
+    notice: 'Archaeological sites', search: 'Search places or discoveries…', legend: 'Archaeological site' },
+  Battles: { title: 'Explore battles.', intro: 'Follow historic conflicts through geography and time.',
+    notice: 'Historic battles', search: 'Search battles or events…', legend: 'Battle' },
+  Geology: { title: 'Explore geology.', intro: 'Discover the landscapes shaped by Earth’s forces.',
+    notice: 'Five geological sample locations', search: 'Search geological features…', legend: 'Geological site' }
+};
+function switchView(name, resetMap = true) {
+  if (!views[name]) return;
+  stop();
+  theme = name;
+  $('atlasApp').setAttribute('data-view', name);
+  query = '';
+  country = 'all';
+  allTime = true;
+  selected = null;
+  journeyIndex = -1;
+  $('detail').hidden = true;
+  $('search').value = '';
+  $('countrySearch').value = '';
+  $('sites').scrollTop = 0;
+  const view = views[name];
+  $('viewTitle').textContent = view.title;
+  $('viewIntro').textContent = view.intro;
+  $('viewNotice').textContent = view.notice;
+  $('search').placeholder = view.search;
+  $('listTitle').textContent = `EXPLORE ${name === 'Battles' ? 'BATTLES' : name === 'Geology' ? 'GEOLOGY' : 'SITES'}`;
+  $('timeline').hidden = name === 'Geology';
+  $('legendLabel').textContent = view.legend;
+  $('legendDot').className = name;
+  $('viewFoot').textContent = name;
+  const viewData = data.filter(s => s.theme === name);
+  $('categoryStatus').textContent = viewData.length ? '' : `${name} data is unavailable.`;
+  $('country').replaceChildren();
+  const all = document.createElement('option');
+  all.value = 'all'; all.textContent = 'All countries';
+  $('country').append(all);
+    const countries = [...new Map(viewData.flatMap(s => s.countries).map(c => [c.id, c])).values()]
+      .sort((a, b) => a.title.localeCompare(b.title));
+    for (const c of countries) {
+      const option = document.createElement('option');
+      option.value = c.id;
+      option.textContent = c.title;
+      $('country').append(option);
+    }
+    if (viewData.some(s => !s.countries.length)) {
+      const option = document.createElement('option');
+      option.value = 'unknown';
+      option.textContent = 'Country not recorded';
+      $('country').append(option);
+    }
+    // Round down to a slider step so every site's timeline point is reachable.
+    timelineMin = Math.min(1950, Math.floor(viewData.reduce((min, s) => Math.min(min, s.ageOlder), Infinity) / 50) * 50);
+    timelineMax = theme === 'Archaeology' ? 10000 : Math.max(timelineMin + 50,
+      Math.ceil(viewData.reduce((max, s) => Math.max(max, s.ageOlder), timelineMin) / 50) * 50);
+    $('timedesc').textContent = `Show ${theme.toLowerCase()} cumulatively through ${calendarLabel(timelineMin)}.`;
+    $('tickOldest').textContent = theme === 'Archaeology' ? 'Before 8050 BCE' : calendarLabel(timelineMax);
+    $('tickMiddleOlder').textContent = calendarLabel(timelineMax - (timelineMax - timelineMin) / 3);
+    $('tickMiddleYounger').textContent = calendarLabel(timelineMax - 2 * (timelineMax - timelineMin) / 3);
+    $('tickLatest').textContent = calendarLabel(timelineMin);
+    threshold = timelineMin;
+    $('time').min = timelineMin;
+    $('time').max = timelineMax;
+    $('time').value = timelineMin;
+    refresh();
+  $('country').value = 'all';
+  document.querySelectorAll('[data-theme]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.theme === name)));
+  if (resetMap && map) map.flyTo({ center: [28, 16], zoom: 1.8 });
+}
+
 function refresh() {
   const list = visible();
   filteredSites = list;
-  $('count').textContent = `${list.length} / ${data.length}`;
+  $('count').textContent = `${list.length} / ${data.filter(s => s.theme === theme).length}`;
   renderSiteRows();
   syncClusterSource();
+  if (map?.getLayer('atlas-clusters')) {
+    map.setPaintProperty('atlas-clusters', 'circle-color', colors[theme] || colors.Archaeology);
+  }
   $('timeLabel').textContent = allTime ? 'All imported dates' : timelineLabel();
   $('time').setAttribute('aria-valuetext', timelineLabel());
   if (selected && !list.some(s => s.id === selected)) {
@@ -322,7 +398,7 @@ function createMap(token) {
     if (token) lib.accessToken = token;
     map = new lib.Map({
       container: 'map',
-      style: token ? 'mapbox://styles/mapbox/light-v11' : {
+      style: token ? 'mapbox://styles/mapbox/dark-v11' : {
         version: 8,
         glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
         sources: {
@@ -359,7 +435,7 @@ function createMap(token) {
       map._atlasVisibleIds = filteredSites.map(s => s.id);
       map.addLayer({ id: 'atlas-clusters', type: 'circle', source: 'atlas-sites',
         filter: ['has', 'point_count'], paint: {
-          'circle-color': colors.Archaeology,
+          'circle-color': colors[theme] || colors.Archaeology,
           'circle-radius': ['step', ['get', 'point_count'], 14, 100, 18, 1000, 22],
           'circle-stroke-width': 2, 'circle-stroke-color': '#152330' } });
       map.addLayer({ id: 'atlas-cluster-count', type: 'symbol', source: 'atlas-sites',
@@ -368,7 +444,7 @@ function createMap(token) {
           'text-size': 12, 'text-font': [token ? 'Open Sans Regular' : 'Noto Sans Regular'], 'text-allow-overlap': true
         }, paint: { 'text-color': '#152330' } });
       map.addLayer({ id: 'atlas-sites', type: 'circle', source: 'atlas-sites',
-        paint: { 'circle-radius': 6, 'circle-color': colors.Archaeology,
+        paint: { 'circle-radius': 6, 'circle-color': ['match', ['get', 'category'], 'Battles', colors.Battles, 'Geology', colors.Geology, colors.Archaeology],
           'circle-stroke-width': 2, 'circle-stroke-color': '#152330' },
         filter: ['!', ['has', 'point_count']] });
       map.on('click', 'atlas-clusters', e => {
@@ -409,9 +485,9 @@ $('toggleTimeline').onclick = () => {
   $('play').hidden = timelineCollapsed;
   $('alltime').hidden = timelineCollapsed;
   $('timeline').setAttribute('data-collapsed', String(timelineCollapsed));
-  $('toggleTimeline').textContent = timelineCollapsed ? 'Expand' : 'Collapse';
   $('toggleTimeline').setAttribute('aria-expanded', String(!timelineCollapsed));
   $('toggleTimeline').setAttribute('aria-label', timelineCollapsed ? 'Expand timeline' : 'Collapse timeline');
+  $('toggleTimeline').setAttribute('title', timelineCollapsed ? 'Expand timeline' : 'Collapse timeline');
 };
 $('countrySearch').oninput = e => {
   const text = e.target.value.trim().toLowerCase();
@@ -424,7 +500,7 @@ $('clearFilters').onclick = () => {
   stop();
   query = '';
   country = 'all';
-  theme = 'all';
+  // Keep the current view when clearing filters.
   allTime = true;
   threshold = timelineMin;
   journeyIndex = -1;
@@ -436,7 +512,7 @@ $('clearFilters').onclick = () => {
   for (const option of $('country').children) option.hidden = false;
   $('time').value = timelineMin;
   $('sites').scrollTop = 0;
-  document.querySelectorAll('[data-theme]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.theme === 'all')));
+  document.querySelectorAll('[data-theme]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.theme === theme)));
   refresh();
   if (map) map.flyTo({ center: [28, 16], zoom: 1.8 });
 };
@@ -479,12 +555,7 @@ $('country').onchange = e => {
     duration: 900
   });
 };
-document.querySelectorAll('[data-theme]').forEach(b => b.onclick = () => {
-  theme = b.dataset.theme;
-  journeyIndex = -1;
-  document.querySelectorAll('[data-theme]').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
-  refresh();
-});
+document.querySelectorAll('[data-theme]').forEach(b => b.onclick = () => switchView(b.dataset.theme));
 $('time').oninput = e => {
   stop();
   threshold = Number(e.target.value);
@@ -511,7 +582,8 @@ $('play').onclick = () => {
   $('play').textContent = 'Ⅱ Pause';
   $('play').setAttribute('aria-label', 'Pause timeline');
   timer = setInterval(() => {
-    threshold = Math.max(timelineMin, threshold - 250);
+    const step = theme === 'Archaeology' ? 250 : Math.max(50, Math.ceil((timelineMax - timelineMin) / 32 / 50) * 50);
+    threshold = Math.max(timelineMin, threshold - step);
     $('time').value = threshold;
     refresh();
     if (threshold === timelineMin) stop();
@@ -529,12 +601,12 @@ $('reset').onclick = () => {
 $('journey').onclick = () => {
   stop();
   allTime = true;
-  theme = 'all';
+  theme = 'Archaeology';
   query = '';
   country = 'all';
   $('country').value = 'all';
   $('search').value = '';
-  document.querySelectorAll('[data-theme]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.theme === 'all')));
+  document.querySelectorAll('[data-theme]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.theme === theme)));
   journeyIndex = -1;
   refresh();
   journeyStep(1);
@@ -569,33 +641,25 @@ async function init() {
     const r = await fetch('data/candidates.json', { cache: 'no-store' });
     if (!r.ok) throw Error();
     data = importedSites(await r.json());
+    try {
+      const battleResponse = await fetch('data/battles.json', { cache: 'no-store' });
+      if (!battleResponse.ok) throw new Error('Battles could not load');
+      const battleData = await battleResponse.json();
+      const battles = importedSites(battleData);
+      const existingIds = new Set(data.map(s => s.id));
+      data = [...data, ...battles.filter(s => !existingIds.has(s.id))];
+    } catch {
+      $('categoryStatus').textContent = 'Battle data is unavailable. Archaeology remains available.';
+    }
+    try {
+      const response = await fetch('data/geology.json', { cache: 'no-store' });
+      if (!response.ok) throw new Error('Geology could not load');
+      const geology = importedSites(await response.json());
+      data = [...data, ...geology];
+    } catch { /* The other views remain usable when optional geology data is missing. */ }
     sitesById = new Map(data.map(s => [s.id, s]));
     for (const s of data) s.searchText = `${s.id} ${s.title} ${s.region} ${s.description}`.toLowerCase();
-    const countries = [...new Map(data.flatMap(s => s.countries).map(c => [c.id, c])).values()]
-      .sort((a, b) => a.title.localeCompare(b.title));
-    for (const c of countries) {
-      const option = document.createElement('option');
-      option.value = c.id;
-      option.textContent = c.title;
-      $('country').append(option);
-    }
-    if (data.some(s => !s.countries.length)) {
-      const option = document.createElement('option');
-      option.value = 'unknown';
-      option.textContent = 'Country not recorded';
-      $('country').append(option);
-    }
-    // Round down to a slider step so every site's timeline point is reachable.
-    timelineMin = Math.min(1950, Math.floor(data.reduce((min, s) => Math.min(min, s.ageOlder), Infinity) / 50) * 50);
-    $('timedesc').textContent = `Show sites cumulatively through ${calendarLabel(timelineMin)}. The oldest position groups sites dated before 8,050 BCE.`;
-    $('tickMiddleOlder').textContent = calendarLabel(timelineMax - (timelineMax - timelineMin) / 3);
-    $('tickMiddleYounger').textContent = calendarLabel(timelineMax - 2 * (timelineMax - timelineMin) / 3);
-    $('tickLatest').textContent = calendarLabel(timelineMin);
-    threshold = timelineMin;
-    $('time').min = timelineMin;
-    $('time').max = timelineMax;
-    $('time').value = timelineMin;
-    refresh();
+    switchView('Archaeology', false);
     let token = '';
     try {
       token = localStorage.getItem('origins.mapbox.publicToken') || '';
@@ -625,12 +689,12 @@ async function init() {
         execute: input => {
           if (!input || typeof input.siteId !== 'string' || !data.some(s => s.id === input.siteId)) throw new Error('A known siteId is required');
           allTime = true;
-          theme = 'all';
+          switchView(sitesById.get(input.siteId).theme);
           query = '';
           country = 'all';
           $('country').value = 'all';
           $('search').value = '';
-          document.querySelectorAll('[data-theme]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.theme === 'all')));
+          document.querySelectorAll('[data-theme]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.theme === theme)));
           refresh();
           selectSite(input.siteId);
           return {

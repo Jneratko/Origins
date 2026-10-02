@@ -10,6 +10,14 @@
   --migration: #76bfcc;
   --culture: #c49bc9;
 }
+body[data-view="Battles"] { --gold: #e68c82; }
+body[data-view="Battles"] .notice { background: #e68c820c; }
+body[data-view="Battles"] .site.active { background: #e68c820d; }
+body[data-view="Geology"] { --gold: #80c995; }
+body[data-view="Geology"] .notice { background: #80c9950c; }
+body[data-view="Geology"] .site.active { background: #80c9950d; }
+body[data-view="Geology"] .legend { bottom: 30px; }
+body[data-view="Geology"] #detail { max-height: calc(100% - 170px); }
 
 * {
   box-sizing: border-box;
@@ -17,6 +25,8 @@
 
 [hidden] { display: none !important; }
 .Archaeology { background: var(--gold); }
+.Battles { background: #e68c82; }
+.Geology { background: #80c995; }
 .source-links { display: flex; gap: 18px; margin-top: 16px; }
 .source-links a { color: var(--gold); text-decoration: underline; }
 
@@ -194,6 +204,9 @@ input[type=search], #token {
   color: #18222a;
   border-color: var(--gold);
 }
+.view-switch { display: flex; margin-bottom: 24px; padding: 4px; background: #0d1720; border-radius: 10px; }
+.view-switch button { flex: 1; border: 0; }
+.view-switch button[data-theme="Battles"][aria-pressed="true"] { background: #e68c82; color: #18222a; }
 
 .listhead {
   display: flex;
@@ -385,6 +398,25 @@ input[type=search], #token {
 .timeline[data-collapsed="true"] .timehead { margin-bottom: 0; flex-wrap: nowrap; }
 .timeline[data-collapsed="true"] .timehead > div { flex-basis: auto; }
 .workspace:has(.timeline[data-collapsed="true"]) .legend { bottom: 130px; }
+.timeline .timehead { padding-right: 24px; }
+.timeline #toggleTimeline {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+}
+.timeline #toggleTimeline:hover { color: var(--gold); background: #ffffff0a; }
+#toggleTimeline svg { transition: transform 180ms ease; }
+#toggleTimeline[aria-expanded="false"] svg { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) { #toggleTimeline svg { transition: none; } }
 
 .timeline label {
   font-size: 12px;

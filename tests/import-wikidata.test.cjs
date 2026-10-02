@@ -35,3 +35,24 @@ test('importer preserves optional descriptions and deduplicates multiple countri
     fs.rmSync(directory, { recursive: true, force: true });
   }
 });
+
+
+test('battle importer writes event dates using P585 and P580 without archaeological inception dates', () => {
+  const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'origins-battles-'));
+  try {
+    const input = path.join(directory, 'input.json');
+    const output = path.join(directory, 'battles.json');
+    const base = { siteLabel: 'Battle', coordinates: 'Point(4 50)', inceptionDate: '1815-06-18T00:00:00Z',
+      datePrecision: '11', calendarModel: 'http://www.wikidata.org/entity/Q1985727',
+      article: 'https://en.wikipedia.org/wiki/Battle' };
+    fs.writeFileSync(input, JSON.stringify(['P585', 'P580'].map((dateProperty, index) => ({
+      ...base, site: `http://www.wikidata.org/entity/Q${index + 1}`, dateProperty
+    }))));
+    const result = spawnSync(process.execPath, [path.resolve(__dirname, '../scripts/import-wikidata.mjs'), '--battles', input, output], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+    const imported = JSON.parse(fs.readFileSync(output, 'utf8'));
+    assert.equal(imported.source.category, 'Battles');
+    assert.deepEqual(imported.records.map(r => r.eventDates[0].property), ['P585', 'P580']);
+    assert.ok(imported.records.every(r => r.category === 'Battles' && !r.inceptionDates));
+  } finally { fs.rmSync(directory, { recursive: true, force: true }); }
+});
