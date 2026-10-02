@@ -193,11 +193,11 @@ function wikiImage(article) {
 }
 
 const views = {
-  Archaeology: { title: 'Explore archaeology.', intro: 'Discover ancient places and the traces people left behind.',
+  Archaeology: { title: 'Before the world had names.', intro: 'Explore our beginnings, one place and one moment at a time.',
     notice: 'Archaeological sites', search: 'Search places or discoveries…', legend: 'Archaeological site' },
-  Battles: { title: 'Explore battles.', intro: 'Follow historic conflicts through geography and time.',
+  Battles: { title: 'Where history changed course.', intro: 'Explore the clashes that shaped our world, one place and one moment at a time.',
     notice: 'Historic battles', search: 'Search battles or events…', legend: 'Battle' },
-  Geology: { title: 'Explore geology.', intro: 'Discover the landscapes shaped by Earth’s forces.',
+  Geology: { title: 'Before the human story.', intro: 'Explore a world written in stone, shaped by fire, water, and time.',
     notice: 'Five geological sample locations', search: 'Search geological features…', legend: 'Geological site' }
 };
 function switchView(name, resetMap = true) {
@@ -216,6 +216,7 @@ function switchView(name, resetMap = true) {
   $('sites').scrollTop = 0;
   const view = views[name];
   $('viewTitle').textContent = view.title;
+  $('filterPanel').open = false;
   $('viewIntro').textContent = view.intro;
   $('viewNotice').textContent = view.notice;
   $('search').placeholder = view.search;
@@ -266,13 +267,17 @@ function switchView(name, resetMap = true) {
 function refresh() {
   const list = visible();
   filteredSites = list;
+  $('clearFilters').hidden = !query && country === 'all' && allTime;
+  $('filterSummary').textContent = country === 'all' ? 'Filter by country'
+    : country === 'unknown' ? 'Country not recorded'
+    : data.flatMap(s => s.countries).find(c => c.id === country)?.title || 'Filter by country';
   $('count').textContent = `${list.length} / ${data.filter(s => s.theme === theme).length}`;
   renderSiteRows();
   syncClusterSource();
   if (map?.getLayer('atlas-clusters')) {
     map.setPaintProperty('atlas-clusters', 'circle-color', colors[theme] || colors.Archaeology);
   }
-  $('timeLabel').textContent = allTime ? 'All imported dates' : timelineLabel();
+  $('timeLabel').textContent = allTime ? 'All time' : timelineLabel();
   $('time').setAttribute('aria-valuetext', timelineLabel());
   if (selected && !list.some(s => s.id === selected)) {
     selected = null;

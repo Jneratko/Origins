@@ -261,7 +261,7 @@ test('country search narrows choices and clear filters restores all sites and st
   get('play').onclick();
   get('clearFilters').onclick();
   assert.equal(get('count').textContent, `${dataset.records.length} / ${dataset.records.length}`);
-  assert.equal(get('timeLabel').textContent, 'All imported dates');
+  assert.equal(get('timeLabel').textContent, 'All time');
   assert.equal(get('play').attributes['aria-label'], 'Play timeline');
   assert.equal(get('country').value, 'all');
   assert.equal(get('countrySearch').value, '');
@@ -324,11 +324,11 @@ test('views isolate countries, dates and clear-filter behavior', async () => {
     eventDates: [{ ...dataset.records[0].inceptionDates[0], value: '1815-06-18T00:00:00Z', property: 'P585' }] };
   const app = await boot(archaeology, undefined, { records: [battle] });
   const get = id => app.elements.get(id);
-  assert.equal(get('viewTitle').textContent, 'Explore archaeology.');
+  assert.equal(get('viewTitle').textContent, 'Before the world had names.');
   assert.ok(!get('country').children.some(c => c.value === 'Q31'));
   get('search').oninput({ target: { value: 'nothing' } });
   app.themes.find(b => b.dataset.theme === 'Battles').onclick();
-  assert.equal(get('viewTitle').textContent, 'Explore battles.');
+  assert.equal(get('viewTitle').textContent, 'Where history changed course.');
   assert.equal(get('atlasApp').attributes['data-view'], 'Battles');
   assert.equal(get('search').value, '');
   assert.equal(get('count').textContent, '1 / 1');

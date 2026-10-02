@@ -29,44 +29,48 @@
         <span class="brandmark">◎</span>
         <div>ORIGINS<small>WORLD HISTORY ATLAS</small></div>
       </a>
-      <span class="era">EXPLORE HISTORY <span>Places and events</span></span>
+      <nav class="filters view-switch" aria-label="Atlas views">
+        <button data-theme="Archaeology" aria-pressed="true">Archaeology</button>
+        <button data-theme="Battles" aria-pressed="false">Battles</button>
+        <button data-theme="Geology" aria-pressed="false">Geology</button>
+      </nav>
+
       <button id="settings">Map settings</button>
     </header>
 
     <main>
       <aside>
-        <nav class="filters view-switch" aria-label="Atlas views">
-          <button data-theme="Archaeology" aria-pressed="true">Archaeology</button>
-          <button data-theme="Battles" aria-pressed="false">Battles</button>
-          <button data-theme="Geology" aria-pressed="false">Geology</button>
-        </nav>
-        <div class="eyebrow">THE HUMAN STORY</div>
-        <h1 id="viewTitle">Explore archaeology.</h1>
+        <h1 id="viewTitle">Before the world had names.</h1>
         <p class="intro" id="viewIntro">Explore our beginnings, one place and one moment at a time.</p>
 
-        <div class="notice">
+        <div class="notice" hidden>
           <b id="viewNotice">Archaeological sites</b>
           <span>Imported from Wikidata, with Wikipedia articles. Explore places and events through time.</span>
         </div>
 
-        <label class="searchlabel" for="search">Find a site</label>
+        <label class="sr-only" for="search">Search this view</label>
         <input
           id="search"
           placeholder="Search places or discoveries…"
           type="search"
         >
 
-        <label class="searchlabel" for="countrySearch">Find a country</label>
-        <input id="countrySearch" type="search" placeholder="Search countries…" aria-controls="country">
-        <label class="searchlabel" for="country">Country</label>
-        <select id="country"><option value="all">All countries</option></select>
-        <button id="clearFilters" type="button">Clear filters</button>
+        <details id="filterPanel" class="filter-panel">
+          <summary id="filterSummary">Filter by country</summary>
+          <div class="filter-body">
+            <label class="sr-only" for="countrySearch">Search countries</label>
+            <input id="countrySearch" type="search" placeholder="Search countries…" aria-controls="country">
+            <label class="searchlabel" for="country">Country</label>
+            <select id="country"><option value="all">All countries</option></select>
+          </div>
+        </details>
 
         <p id="categoryStatus" class="fine" role="status"></p>
 
         <div class="listhead">
           <span id="listTitle">EXPLORE SITES</span>
-          <span id="count"></span>
+          <span id="count" aria-live="polite"></span>
+          <button id="clearFilters" type="button" hidden>Clear filters</button>
         </div>
         <div id="sites"><div id="siteRows"></div></div>
 
@@ -75,6 +79,7 @@
           <b>The spread of Homo sapiens</b>
           <small>Explore 6 illustrative stops</small>
         </button>
+        <p class="data-note">Wikipedia &amp; Wikidata · approximate locations</p>
       </aside>
 
       <section class="workspace" aria-label="Interactive history map">
@@ -95,8 +100,8 @@
         <div class="timeline" id="timeline">
           <div class="timehead">
             <div>
-              <span class="eyebrow">TRAVEL THROUGH TIME</span>
-              <strong id="timeLabel">All imported dates</strong>
+              <span class="eyebrow">Timeline</span>
+              <strong id="timeLabel">All time</strong>
             </div>
             <button id="play" aria-label="Play timeline">▶ Play</button>
             <button id="alltime">All time</button>
@@ -104,7 +109,7 @@
           </div>
 
           <div id="timelineControls">
-          <label for="time" id="timedesc">Show sites cumulatively through the selected calendar year. The oldest position groups sites dated before 8050 BCE.</label>
+          <label class="sr-only" for="time" id="timedesc">Show sites cumulatively through the selected calendar year. The oldest position groups sites dated before 8050 BCE.</label>
           <input
             id="time"
             type="range"

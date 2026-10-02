@@ -712,3 +712,102 @@ dialog label {
 .filters button {
   font-size: 14px;
 }
+
+/* Simplified atlas layout */
+header { height: 68px; padding: 0 24px; gap: 24px; background: #101a23; }
+.brand { font-size: 18px; letter-spacing: 2px; gap: 9px; }
+.brandmark { font-size: 32px; }
+.brand small { font-size: 8px; letter-spacing: 1.8px; }
+header #settings { font-size: 12px; padding: 8px 12px; background: transparent; }
+header .view-switch { margin: 0; padding: 4px; gap: 4px; flex-wrap: nowrap; background: #0b141d; }
+.view-switch button { font-size: 13px; padding: 8px 16px; border-radius: 6px; }
+main { grid-template-columns: 320px 1fr; height: calc(100dvh - 68px); min-height: 520px; }
+aside { display: flex; flex-direction: column; padding: 24px 20px 12px; overflow: hidden; background: #111d27; }
+h1 { font: 600 25px/1.25 system-ui, sans-serif; letter-spacing: -.6px; margin: 0 0 8px; }
+#viewTitle { font: 400 34px/1.12 Georgia, serif; letter-spacing: -.8px; margin-bottom: 12px; }
+.intro { font-size: 13px; line-height: 1.6; margin: 0 0 20px; }
+#search { margin-bottom: 12px; padding: 12px; border-radius: 9px; }
+.filter-panel { border: 1px solid var(--line); border-radius: 9px; margin-bottom: 18px; flex-shrink: 0; }
+.filter-panel summary { cursor: pointer; padding: 11px 12px; font-size: 13px; color: var(--muted); }
+.filter-panel[open] summary { color: var(--gold); border-bottom: 1px solid var(--line); }
+.filter-body { padding: 12px; }
+#countrySearch { margin: 0 0 12px; }
+#country { margin: 0; padding: 9px; }
+.searchlabel { font-size: 12px; color: var(--muted); }
+.listhead { align-items: center; gap: 8px; font-size: 10px; letter-spacing: 1px; margin-bottom: 8px; min-height: 28px; }
+#count { margin-left: auto; white-space: nowrap; letter-spacing: 0; font-size: 12px; }
+#clearFilters { width: auto; margin: 0; padding: 4px 0 4px 8px; border: 0; background: transparent; color: var(--gold); font-size: 11px; letter-spacing: 0; }
+#sites { flex: 1; min-height: 144px; height: auto; max-height: none; overflow-y: auto; }
+.site { padding: 12px 10px; border-bottom-color: #ffffff08; border-radius: 8px; }
+.site:hover { background: #ffffff05; }
+.site b { font-size: 13px; }
+.site small { margin-top: 3px; font-size: 11px; }
+.data-note { margin: 12px 0 0; padding-top: 12px; border-top: 1px solid var(--line); color: var(--muted); font-size: 10px; }
+#categoryStatus:empty { display: none; }
+.maptop { top: 16px; left: 20px; right: 20px; }
+.maptop #mapmode { background: #12202ec0; font-size: 10px; border: 0; }
+.maptop #reset { font-size: 12px; padding: 7px 11px; }
+.timeline { bottom: 20px; left: 20px; right: 20px; padding: 16px 20px; border-radius: 12px; }
+.timehead { margin-bottom: 4px; }
+.timehead .eyebrow { font-size: 10px; letter-spacing: 1px; }
+.timehead strong { font: 500 21px/1.3 system-ui, sans-serif; margin-top: 3px; }
+.timehead button { font-size: 12px; }
+.timeline .timehead { padding-right: 26px; }
+.ticks { font-size: 10px; }
+.timefoot { margin-top: 10px; padding-top: 8px; font-size: 10px; }
+.legend { bottom: 182px; left: 20px; background: #12202eb8; font-size: 10px; padding: 6px 10px; }
+.workspace:has(.timeline[data-collapsed="true"]) .legend { bottom: 114px; }
+#detail { top: 64px; right: 20px; width: 320px; padding: 22px; max-height: calc(100% - 254px); }
+#detail h2 { font: 600 23px/1.25 system-ui, sans-serif; }
+#detail .age { font-size: 17px; }
+#detail p { font-size: 13px; }
+#detail .site-country { margin: 8px 0; font-size: 12px; }
+#detail .eyebrow { font-size: 9px; }
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
+@media (max-width: 900px) {
+ main { grid-template-columns: 280px 1fr; }
+ header { gap: 12px; padding: 0 16px; }
+ .view-switch button { padding: 8px 10px; }
+ aside { padding: 20px 16px 12px; }
+ #detail { width: 280px; right: 16px; }
+}
+@media (max-width: 650px) {
+ header { height: auto; min-height: 98px; padding: 12px 16px; flex-wrap: wrap; gap: 10px; }
+ header .brand { flex: 1; }
+ header .view-switch { order: 3; flex: 0 0 100%; }
+ header .view-switch button { flex: 1; }
+ main { display: flex; height: auto; min-height: 0; }
+ aside { order: 0; padding: 18px 16px; overflow: visible; border: 0; }
+ h1 { font-size: 22px; }
+ .intro { margin-bottom: 12px; }
+ #sites { height: 216px; min-height: 216px; max-height: 216px; flex: none; }
+ .filter-panel { margin-bottom: 12px; }
+ .data-note { display: none; }
+ .workspace { order: 1; min-height: 560px; height: 72dvh; }
+ .timeline { left: 12px; right: 12px; bottom: 12px; padding: 14px; }
+ .timehead { flex-wrap: nowrap; gap: 6px; }
+ .timehead > div { flex-basis: auto; min-width: 0; }
+ .timehead strong { font-size: 16px; }
+ .timehead button { padding: 6px 8px; font-size: 11px; }
+ .timeline #toggleTimeline { top: 5px; right: 5px; }
+ .ticks span:nth-child(2), .ticks span:nth-child(3) { display: none; }
+ .legend { bottom: 168px; left: 12px; }
+ #detail { top: 64px; left: 12px; right: 12px; width: auto; padding: 18px; max-height: calc(100% - 240px); }
+}
+
+.timeline[data-collapsed="true"] {
+  right: auto;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+}
+.timeline[data-collapsed="true"] .timehead { padding: 0; margin: 0; }
+.timeline[data-collapsed="true"] .timehead > div { display: none; }
+.timeline[data-collapsed="true"] #toggleTimeline {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 11px;
+  color: var(--gold);
+}
+.workspace:has(.timeline[data-collapsed="true"]) .legend { bottom: 76px; }
