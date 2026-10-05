@@ -431,6 +431,34 @@ input[type=range] {
   cursor: pointer;
 }
 
+#time {
+  appearance: none;
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(to right, var(--gold) var(--fill, 100%), var(--line) var(--fill, 100%));
+}
+
+#time::-webkit-slider-thumb {
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+#time::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--gold);
+}
+
+#time::-moz-range-track,
+#time::-moz-range-progress {
+  background: transparent;
+}
+
 .ticks {
   display: flex;
   justify-content: space-between;

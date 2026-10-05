@@ -279,6 +279,8 @@ function refresh() {
   }
   $('timeLabel').textContent = allTime ? 'All time' : timelineLabel();
   $('time').setAttribute('aria-valuetext', timelineLabel());
+  const fill = 100 * (timelineMax - threshold) / (timelineMax - timelineMin);
+  $('time').style.setProperty('--fill', `${fill}%`);
   if (selected && !list.some(s => s.id === selected)) {
     selected = null;
     $('detail').hidden = true;
